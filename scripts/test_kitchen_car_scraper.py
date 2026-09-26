@@ -3,11 +3,19 @@ import subprocess
 import os
 import sys
 import argparse
+from datetime import date
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from scrape_kitchen_cars import infer_date
+
+# 定期出店の年を補う基準日。フィクスチャの「次回出店」はこの日を基準に書いている
+TODAY = "2026-09-27"
 
 def run_scraper(input_html, output_json):
     # テストを起動したインタプリタで実行する。python3 を直に指定すると、
     # 仮想環境から実行したときに bs4 が見つからず落ちる。
-    subprocess.run([sys.executable, "scripts/scrape_kitchen_cars.py", input_html, output_json], check=True)
+    subprocess.run([sys.executable, "scripts/scrape_kitchen_cars.py", input_html, output_json,
+                    "--today", TODAY], check=True)
     with open(output_json, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -21,7 +29,8 @@ def test_kitchen_car_scraper(sample_html, empty_html, output_json):
     by_id = {d["id"]: d for d in data}
 
     # 1. 件数確認（重複1件と日付なし1件が除かれ、出店情報以外のリンクは拾われない）
-    expected_count = 5
+    #    単日出店5件と定期出店2件
+    expected_count = 7
     check(failures, len(data) == expected_count,
           f"Expected {expected_count} entries, but got {len(data)}")
 
@@ -67,6 +76,29 @@ def test_kitchen_car_scraper(sample_html, empty_html, output_json):
 
     # 6. 日付のない出店はスキップされる
     check(failures, "XXXXXX" not in by_id, "Entry without a date badge should be skipped")
+
+    # 6b. 定期出店は「次回出店」の月日に年を補って記録される。
+    #     バッジの「毎週月曜日」を日付と誤認して読み飛ばしていた不具合の回帰テスト
+    panda = sorted(d["date"] for d in data if d["id"] == "vmSb9R")
+    check(failures, panda == ["2026-09-28", "2026-11-11"],
+          f"Regular entries should be dated by their next date, but got {panda!r}")
+    panda_mon = next((d for d in data if d["id"] == "vmSb9R" and d["date"] == "2026-09-28"), None)
+    if panda_mon:
+        check(failures, (panda_mon["name"], panda_mon["headline"]) == ("Panda Kitchen", "クロッフル"),
+              f"Unexpected name/headline for a regular entry: {panda_mon['name']!r}, {panda_mon['headline']!r}")
+        check(failures, (panda_mon["start_time"], panda_mon["end_time"]) == ("11:00", "17:00"),
+              f"Expected 11:00-17:00, but got {panda_mon['start_time']}-{panda_mon['end_time']}")
+
+    # 6c. 年の推定は基準日に最も近い年を選ぶ（年末年始をまたいでも、前日の日付が残っていてもずれない）
+    for today, (m, d), expected in [
+        (date(2026, 12, 20), (1, 8), date(2027, 1, 8)),
+        (date(2027, 1, 5), (12, 25), date(2026, 12, 25)),
+        (date(2026, 9, 28), (9, 27), date(2026, 9, 27)),
+        (date(2028, 2, 1), (2, 29), date(2028, 2, 29)),
+    ]:
+        got = infer_date(m, d, today)
+        check(failures, got == expected,
+              f"infer_date({m}, {d}, {today}) should be {expected}, but got {got}")
 
     # 7. 出店が0件でもエラーにならず空配列を返す（夏期休暇中の実ページがこの状態）
     empty = run_scraper(empty_html, output_json)

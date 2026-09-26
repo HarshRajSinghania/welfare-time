@@ -3,6 +3,9 @@ import re
 import argparse
 from bs4 import BeautifulSoup
 import unicodedata
+from datetime import date, datetime, timedelta, timezone
+
+JST = timezone(timedelta(hours=9), "JST")
 
 def squash_name(x):
     if not isinstance(x, str): return ""
@@ -29,22 +32,60 @@ def get_id_from_url(url, fallback_name):
             return match.group(1)
     return slugify(fallback_name)
 
-def scrape_kitchen_cars(input_path, output_path):
+def infer_date(month, day, today):
+    """年のない月日に、today に最も近い年を補う。
+
+    定期出店の「次回出店」は年を含まない。12月に翌年1月の出店が載る場合や、
+    ページの更新が遅れて前日の日付が残る場合でも正しい年になるよう、
+    前年・今年・翌年のうち today に最も近いものを選ぶ。
+    """
+    candidates = []
+    for year in (today.year - 1, today.year, today.year + 1):
+        try:
+            candidates.append(date(year, month, day))
+        except ValueError:
+            # 2月29日がない年など
+            pass
+    if not candidates:
+        return None
+    return min(candidates, key=lambda d: abs((d - today).days))
+
+def parse_date(item, today):
+    """出店日を YYYY-MM-DD で返す。見つからなければ None。
+
+    単日出店はバッジに「2026/10/07 (水)」の形で日付がある。
+    定期出店はバッジが「毎週月曜日」で、日付は「次回出店 9月28日」として別に載る。
+    定期出店は次回の1日分だけを記録する。毎朝の取得で次回が進み、
+    過ぎた日はアーカイブで凍結されるので、毎週分が順に残っていく。
+    """
+    date_el = item.find("span", class_="badge")
+    date_text = date_el.get_text(strip=True) if date_el else ""
+    m = re.search(r"(\d{4})/(\d{2})/(\d{2})", date_text)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+
+    m = re.search(r"次回出店\s*(\d{1,2})月(\d{1,2})日", item.get_text(" ", strip=True))
+    if m:
+        d = infer_date(int(m.group(1)), int(m.group(2)), today)
+        return d.isoformat() if d else None
+    return None
+
+def scrape_kitchen_cars(input_path, output_path, today=None):
+    if today is None:
+        today = datetime.now(JST).date()
+
     with open(input_path, "r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, "html.parser")
 
     results = []
-    
+
     # ページ内の各出店情報を特定する要素を取得
     items = soup.find_all("a", class_="a-link text-body text-decoration-none d-block")
 
     for item in items:
-        # 日付: badgeクラス
-        date_el = item.find("span", class_="badge")
-        date_text = date_el.get_text(strip=True) if date_el else ""
-        date_match = re.search(r"(\d{4})/(\d{2})/(\d{2})", date_text)
-        if not date_match: continue
-        
+        date_str = parse_date(item, today)
+        if not date_str: continue
+
         # 店舗名: card-title
         name_el = item.find("div", class_="card-title")
         name = name_el.get_text(strip=True) if name_el else "不明"
@@ -71,7 +112,7 @@ def scrape_kitchen_cars(input_path, output_path):
             "id": get_id_from_url(url, shop_name),
             "name": shop_name,
             "location": "",
-            "date": f"{date_match.group(1)}-{date_match.group(2)}-{date_match.group(3)}",
+            "date": date_str,
             "start_time": squash_field(start),
             "end_time": squash_field(end),
             "business_hours": squash_field(time_text),
@@ -96,6 +137,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scrape kitchen car schedule HTML")
     parser.add_argument("input", help="Input HTML path")
     parser.add_argument("output", help="Output JSON path")
+    parser.add_argument("--today", type=date.fromisoformat,
+                        help="Base date (YYYY-MM-DD) for inferring the year of regular entries. Defaults to today in JST")
     args = parser.parse_args()
-    
-    scrape_kitchen_cars(args.input, args.output)
+
+    scrape_kitchen_cars(args.input, args.output, args.today)
