@@ -57,7 +57,7 @@
   - `modal.js`：モーダルの開閉。開くボタンに `data-modal-open="モーダルのid"`、閉じるボタンに `data-modal-close` を付けます。
 - **パスは `window.BASE_PATH` から作ります。** サブパス（`/welfare-time/`）で配信しているため、リソースやAPIのパスはすべて `BASE_PATH` を前置します。`BASE_PATH` は `baseof.html` が `relURL` で求めて渡します。
 - **データで動かします。** 建物の座標などはマスター（`assets/facilities.json`）を非同期に読み込み、JavaScript にハードコードしません。
-- **イベントは委譲します。** 店舗の一覧（`#shop-grid`）にイベントリスナーを一度だけ登録し、`mouseover` や `mouseout` でカードへの操作を検知します。要素ごとに `onmouseenter` などを設定しません。
+- **イベントは委譲します。** カードや建物の範囲ごとに `onmouseenter` などを設定しません。`document` で `mouseover` を一度だけ受け、カーソルの下のカードや建物が変わったかで判定します（`delegateHover()`）。`mouseout` には頼りません。描き直しで取り除かれた要素の `mouseout` は届かないためです。
 - **描画の完了を保証します。** `render()` はDOMを作り終えてから、引数で受け取ったコールバックを同期的に実行します。マップの操作の初期化は、このコールバックの中で行います。
 - **テンプレートにスクリプトを書きません。** `layouts/` 配下のHTMLにインラインの JavaScript や `onclick` などのイベント属性を残しません。ただし、`baseof.html` でのスクリプトの読み込みと `BASE_PATH` の設定、Google Analytics の計測タグ（`partials/google_analytics.html`）は除きます。
 

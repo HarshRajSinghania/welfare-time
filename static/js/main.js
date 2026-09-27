@@ -121,8 +121,10 @@ async function fetchData() {
             // Initialize Filter and Sort Modules
             Filter.load();
             Sort.load();
-            Filter.initUI(categories, render);
-            Sort.initUI(render);
+            // 絞り込みや並び替えで描き直したときは、マップの強調をカーソルの位置に合わせ直す
+            const rerender = () => render(isMapPage ? syncMapHighlight : undefined);
+            Filter.initUI(categories, rerender);
+            Sort.initUI(rerender);
             
             // マップの操作は、最初の描画が終わってから一度だけ初期化する。
             // イベントは一覧とマップに委譲するので、描き直すたびに初期化し直す必要はない。
@@ -332,20 +334,38 @@ function findBuildingOfCard(card) {
     return card.dataset.location === KITCHEN_CAR_LOCATION ? KITCHEN_CAR_BUILDING : null;
 }
 
+// delegateHover() で登録した、カーソルが入った・出たときの処理の一覧
+const hoverTargets = [];
+
 /**
- * container の中の selector に合う要素に、カーソルが入った・出たときの処理をイベント委譲で登録する。
- * mouseover / mouseout は子要素の間を移るたびに発生するので、移った先（relatedTarget）が
- * 同じ要素の中なら無視し、mouseenter / mouseleave と同じ動きにする。
+ * container の中の selector に合う要素に、カーソルが入った・出たときの処理を登録する。
+ * 要素ごとにイベントを設定せず、document の mouseover でカーソルの下の要素が変わったかを判定する。
+ * mouseout には頼らない。カーソルの下の要素が描き直しで取り除かれると、その要素の mouseout は
+ * document まで届かず、離れたことを検知できなくなるためである。
  */
 function delegateHover(container, selector, onEnter, onLeave) {
-    const handle = (e, callback) => {
-        const el = e.target.closest(selector);
-        if (!el || !container.contains(el) || el.contains(e.relatedTarget)) return;
-        callback(el);
-    };
-    container.addEventListener('mouseover', e => handle(e, onEnter));
-    container.addEventListener('mouseout', e => handle(e, onLeave));
+    hoverTargets.push({ container, selector, onEnter, onLeave, active: null });
 }
+
+function updateHover(target) {
+    const next = hoverTargets.map(h => {
+        const el = target && h.container.contains(target) ? target.closest(h.selector) : null;
+        return el && h.container.contains(el) ? el : null;
+    });
+    // 離れた処理をすべて済ませてから、入った処理を行う。
+    // カードから建物へ移ったときに、カードの強調の解除が建物の強調を消さないようにするため。
+    hoverTargets.forEach((h, i) => {
+        if (h.active && h.active !== next[i]) h.onLeave(h.active);
+    });
+    hoverTargets.forEach((h, i) => {
+        if (next[i] && next[i] !== h.active) h.onEnter(next[i]);
+        h.active = next[i];
+    });
+}
+
+document.addEventListener('mouseover', e => updateHover(e.target));
+// ウィンドウの外に出たときは、どの要素からも離れたものとする
+document.addEventListener('mouseout', e => { if (!e.relatedTarget) updateHover(null); });
 
 /** 建物の施設のカードを強調して一覧の先頭に移し、ほかのカードを薄くする。 */
 function highlightBuilding(buildingId, shopGrid) {
@@ -401,6 +421,32 @@ function clearCardHighlight(shopGrid, overlay) {
     }
     if (mapImg) mapImg.classList.remove(DIMMED_MAP_CLASS);
     shopGrid.querySelectorAll(CARD_SELECTOR).forEach(c => c.classList.remove(DIMMED_CARD_CLASS));
+}
+
+// 最後に分かっているカーソルの位置（ビューポート座標）。ウィンドウの外に出たら null にする。
+// 描き直した直後はブラウザが :hover を更新していないため、カーソルの下の要素はこの位置から求める。
+let lastPointer = null;
+document.addEventListener('mousemove', e => { lastPointer = { x: e.clientX, y: e.clientY }; });
+document.addEventListener('mouseout', e => { if (!e.relatedTarget) lastPointer = null; });
+
+/**
+ * 一覧を描き直したあと、強調の状態をカーソルの位置に合わせ直す。
+ * カードは作り直されているので、古いカードに対する強調（建物の強調やマップの薄さ）を解除してから、
+ * カーソルが建物かカードの上にあれば、新しいカードに対して強調し直す。
+ */
+function syncMapHighlight() {
+    const overlay = document.getElementById('overlay');
+    const shopGrid = document.getElementById('shop-grid');
+    if (!overlay || !shopGrid || !master) return;
+    clearCardHighlight(shopGrid, overlay);
+    const pointed = lastPointer && document.elementFromPoint(lastPointer.x, lastPointer.y);
+    const hoveredArea = pointed && overlay.contains(pointed) ? pointed.closest('.building-area') : null;
+    const hoveredCard = pointed && shopGrid.contains(pointed) ? pointed.closest(CARD_SELECTOR) : null;
+    if (hoveredArea) {
+        highlightBuilding(hoveredArea.id.replace('area-', ''), shopGrid);
+    } else if (hoveredCard) {
+        highlightCard(hoveredCard, shopGrid);
+    }
 }
 
 /** マップの建物の範囲を作り、一覧とマップの連動を登録する。一度だけ呼ぶ。 */
