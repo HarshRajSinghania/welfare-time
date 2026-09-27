@@ -1,28 +1,47 @@
 name: Copilot Setup Steps
 
+# Copilot coding agent が作業を始める前に実行する環境構築。
+# ジョブ名は copilot-setup-steps でなければ Copilot に認識されない。
+# 内容は毎朝のデータ更新（daily_update.yml）とそろえる。
+
 on:
   workflow_dispatch: {}
+  # このファイルを変更したときに、実際に動くことを確認する
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
 
 jobs:
-  setup:
+  copilot-setup-steps:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - name: リポジトリをチェックアウト
-        uses: actions/checkout@v4
+      - name: リポジトリをチェックアウトする
+        uses: actions/checkout@v6
 
-      - name: Python をセットアップ
+      - name: Python をセットアップする
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: 依存パッケージをインストール
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.119.0'
+          extended: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+
+      - name: 依存パッケージをインストールする
         run: |
           pip install -r requirements.txt
           playwright install chromium
-
-      - name: セットアップ確認
-        run: |
-          python --version
-          pip --version
-          echo "Copilot setup steps completed."
+          npm ci
