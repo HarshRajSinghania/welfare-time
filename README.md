@@ -93,11 +93,7 @@ just PYTHON=/path/to/venv/bin/python test
 
 バージョン番号は `package.json` の `version` だけで管理し、サイトのフッタはこの値を表示します。フッタのコード最終更新日時は、`just build_html` の実行時に main の履歴から求めます。`data/` だけを変更したコミットは対象外なので、毎朝の自動更新では変わりません。
 
-リリースするときは次の手順で行います。
-
-1. `CHANGELOG.md` に新しいバージョンの変更点を追記します。
-2. `package.json` の `version` を上げます。
-3. main にマージしたあと、`v0.4.0` のようにタグを打ちます。
+リリースの手順は [仕様書の「バージョン管理」](resources/spec/development.md#バージョン管理) にあります。
 
 ## ディレクトリ構成
 
@@ -111,6 +107,8 @@ just PYTHON=/path/to/venv/bin/python test
 | `static/` | 静的ファイル。`static/api/` は生成物のため追跡対象外 |
 | `data/` | 取得したPDFとキッチンカーのアーカイブ |
 | `testdata/` | テスト用のPDFとHTMLフィクスチャ |
+| `resources/spec/` | 仕様書と開発の規約 |
+| `resources/` | 発表用のスライドやポスター |
 | `.github/workflows/` | 毎朝のデータ更新ワークフロー |
 
 `public/` は Hugo の出力先かつ gh-pages のワークツリーで、リポジトリには含まれません。
@@ -129,5 +127,5 @@ just PYTHON=/path/to/venv/bin/python test
 
 ## リンク集
 
-- [プロジェクト詳細ドキュメント (GEMINI.md)](GEMINI.md): 命名規則やデータ正規化の方針。
+- [仕様書 (resources/spec/)](resources/spec/README.md): システム構成、データの規約と不変条件、APIの設計方針、サイトの規約、開発の進め方。
 - [利用規約・ライセンス](LICENSE): プロジェクトのライセンス情報。
