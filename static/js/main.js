@@ -105,18 +105,19 @@ async function fetchData() {
         if (scheduleRes.ok) {
             currentData = await scheduleRes.json();
             
-            // Extract categories dynamically from facilities data
+            // カテゴリの一覧は、マスターに現れる順に並べ、キッチンカーは必ず最後に置く。
+            // 表示フィルタの項目の順と、並び替えのカテゴリ順に使う。
+            // マスターにキッチンカーの施設があっても途中に並ばないよう、集めるときは除いておく。
+            const KITCHEN_CAR_CATEGORY = 'キッチンカー';
             const categories = [];
             if (master && master.facilities) {
                 master.facilities.forEach(c => {
-                    if (c.category && !categories.includes(c.category)) {
+                    if (c.category && c.category !== KITCHEN_CAR_CATEGORY && !categories.includes(c.category)) {
                         categories.push(c.category);
                     }
                 });
             }
-            if (!categories.includes('キッチンカー')) {
-                categories.push('キッチンカー');
-            }
+            categories.push(KITCHEN_CAR_CATEGORY);
 
             // Initialize Filter and Sort Modules
             Filter.load();
@@ -124,7 +125,7 @@ async function fetchData() {
             // 絞り込みや並び替えで描き直したときは、マップの強調をカーソルの位置に合わせ直す
             const rerender = () => render(isMapPage ? syncMapHighlight : undefined);
             Filter.initUI(categories, rerender);
-            Sort.initUI(rerender);
+            Sort.initUI(rerender, categories);
             
             // マップの操作は、最初の描画が終わってから一度だけ初期化する。
             // イベントは一覧とマップに委譲するので、描き直すたびに初期化し直す必要はない。
