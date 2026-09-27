@@ -289,6 +289,9 @@ if (themeBtn) {
 
 // --- Map Logic ---
 const IMAGE_WIDTH = 1019, IMAGE_HEIGHT = 747;
+// 強調表示で、対象外のカードとマップの画像を薄くするクラス。style を直接書き換えず、クラスの付け外しで表す。
+const DIMMED_CARD_CLASS = 'opacity-30';
+const DIMMED_MAP_CLASS = 'opacity-50';
 function updateOverlay() {
     if (!master) return;
     const img = document.querySelector('#map-wrapper img');
@@ -322,7 +325,7 @@ async function initMapInteractions(displayedShops) {
             const matchedIds = matchedShops.map(s => 'card-' + s.id);
             shopGrid.querySelectorAll('[id^="card-"]').forEach(card => {
                 const isMatch = matchedIds.includes(card.id);
-                card.style.opacity = isMatch ? '1' : '0.2';
+                card.classList.toggle(DIMMED_CARD_CLASS, !isMatch);
                 if (isMatch) { 
                     card.classList.add('ring-2', 'ring-ksu', 'dark:ring-blue-500'); 
                     shopGrid.prepend(card); 
@@ -344,15 +347,15 @@ async function initMapInteractions(displayedShops) {
                 const area = document.getElementById('area-' + bId);
                 if (area) area.classList.add('highlighted');
                 if (feedbackOverlay) feedbackOverlay.classList.add('hidden');
-                if (mapImg) mapImg.style.opacity = '1';
+                if (mapImg) mapImg.classList.remove(DIMMED_MAP_CLASS);
             } else {
                 if (feedbackOverlay) {
                     feedbackOverlay.classList.remove('hidden');
                     feedbackOverlay.classList.add('flex');
                 }
-                if (mapImg) mapImg.style.opacity = '0.5';
+                if (mapImg) mapImg.classList.add(DIMMED_MAP_CLASS);
             }
-            shopGrid.querySelectorAll('[id^="card-"]').forEach(c => { if (c !== card) c.style.opacity = '0.3'; });
+            shopGrid.querySelectorAll('[id^="card-"]').forEach(c => c.classList.toggle(DIMMED_CARD_CLASS, c !== card));
         };
         card.onmouseleave = () => {
             overlay.querySelectorAll('.building-area').forEach(area => area.classList.remove('highlighted'));
@@ -362,8 +365,8 @@ async function initMapInteractions(displayedShops) {
                 feedbackOverlay.classList.add('hidden');
                 feedbackOverlay.classList.remove('flex');
             }
-            if (mapImg) mapImg.style.opacity = '1';
-            shopGrid.querySelectorAll('[id^="card-"]').forEach(c => { c.style.opacity = '1'; });
+            if (mapImg) mapImg.classList.remove(DIMMED_MAP_CLASS);
+            shopGrid.querySelectorAll('[id^="card-"]').forEach(c => c.classList.remove(DIMMED_CARD_CLASS));
         };
     });
     updateOverlay();
