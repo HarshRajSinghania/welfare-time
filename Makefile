@@ -7,6 +7,9 @@ DEST_DIR = static
 PDFS_DEST_DIR = $(DEST_DIR)/daily
 FACILITIES_JSON = $(SCRIPTS_DIR)/facilities.json
 BASE_URL = $(shell hugo config | grep -i "^baseurl" | awk '{print $$3}' | tr -d "'" | sed 's|/$$||')
+# フッタに表示するコードの最終更新日時（JST）。main 上で data/ 以外を変更した最後のコミットの時刻。
+# 毎朝の自動更新は data/ だけをコミットするので、データの更新では変わらない。
+CODE_UPDATED = $(shell TZ=Asia/Tokyo git log -1 --first-parent --date=format-local:'%Y-%m-%d %H:%M' --format=%cd -- . ':!$(DATA_DIR)' 2>/dev/null)
 
 # Output files
 KITCHEN_CARS_RAW = $(KITCHEN_CARS_SRC)/raw.html
@@ -75,10 +78,10 @@ css:
 	npx @tailwindcss/cli -i assets/css/main.css -o static/css/compiled.css --minify
 
 build_html: css
-	hugo --minify
+	HUGO_PARAMS_CODEUPDATED='$(CODE_UPDATED)' hugo --minify
 
 serve:
-	hugo server
+	HUGO_PARAMS_CODEUPDATED='$(CODE_UPDATED)' hugo server
 
 # Utilities
 clean:
