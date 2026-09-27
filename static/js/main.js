@@ -287,6 +287,9 @@ if (themeBtn) {
     themeBtn.onclick = () => applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
 }
 
+// --- Reload Button ---
+document.getElementById('btn-reload')?.addEventListener('click', reloadPage);
+
 // --- Map Logic ---
 const IMAGE_WIDTH = 1019, IMAGE_HEIGHT = 747;
 function updateOverlay() {

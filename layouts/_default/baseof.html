@@ -29,14 +29,14 @@
         <div id="filterModal" class="hidden w-full max-w-md bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <h5 class="text-lg font-bold">表示フィルタ</h5>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <button type="button" data-modal-close class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     <i class="bi bi-x-lg text-xl"></i>
                 </button>
             </div>
             <div id="filter-options-body" class="px-6 py-4 max-h-[60vh] overflow-y-auto"></div>
             <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 flex gap-3">
                 <button id="reset-filter" class="flex-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">リセット</button>
-                <button onclick="closeModal()" class="flex-1 px-4 py-2 text-sm font-medium bg-ksu text-white hover:bg-ksu/90 rounded-lg transition-colors">閉じる</button>
+                <button type="button" data-modal-close class="flex-1 px-4 py-2 text-sm font-medium bg-ksu text-white hover:bg-ksu/90 rounded-lg transition-colors">閉じる</button>
             </div>
         </div>
 
@@ -44,7 +44,7 @@
         <div id="sortModal" class="hidden w-full max-w-md bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <h5 class="text-lg font-bold">並び替え</h5>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <button type="button" data-modal-close class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     <i class="bi bi-x-lg text-xl"></i>
                 </button>
             </div>
@@ -63,7 +63,7 @@
                 </label>
             </div>
             <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
-                <button onclick="closeModal()" class="w-full px-4 py-2 text-sm font-medium bg-ksu text-white hover:bg-ksu/90 rounded-lg transition-colors">閉じる</button>
+                <button type="button" data-modal-close class="w-full px-4 py-2 text-sm font-medium bg-ksu text-white hover:bg-ksu/90 rounded-lg transition-colors">閉じる</button>
             </div>
         </div>
 
@@ -71,7 +71,7 @@
         <div id="statusModal" class="hidden w-full max-w-md bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <h5 class="text-lg font-bold">情報元</h5>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <button type="button" data-modal-close class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     <i class="bi bi-x-lg text-xl"></i>
                 </button>
             </div>
@@ -79,7 +79,7 @@
                 <div id="source-links" class="space-y-2"></div>
             </div>
             <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
-                <button onclick="closeModal()" class="w-full px-4 py-2 text-sm font-medium bg-ksu text-white hover:bg-ksu/90 rounded-lg transition-colors">閉じる</button>
+                <button type="button" data-modal-close class="w-full px-4 py-2 text-sm font-medium bg-ksu text-white hover:bg-ksu/90 rounded-lg transition-colors">閉じる</button>
             </div>
         </div>
     </div>
@@ -98,25 +98,6 @@
     <script src="{{ "js/filter.js" | relURL }}"></script>
     <script src="{{ "js/sort.js" | relURL }}"></script>
     <script src="{{ "js/main.js" | relURL }}"></script>
-    <script>
-        function openModal(id) {
-            const backdrop = document.getElementById('modal-backdrop');
-            const modal = document.getElementById(id);
-            backdrop.classList.remove('hidden');
-            backdrop.classList.add('flex');
-            modal.classList.remove('hidden');
-        }
-        function closeModal() {
-            const backdrop = document.getElementById('modal-backdrop');
-            backdrop.classList.add('hidden');
-            backdrop.classList.remove('flex');
-            const modals = ['filterModal', 'sortModal', 'statusModal'];
-            modals.forEach(m => document.getElementById(m).classList.add('hidden'));
-        }
-        // Close modal on backdrop click
-        document.getElementById('modal-backdrop').onclick = function(e) {
-            if (e.target === this) closeModal();
-        };
-    </script>
+    <script src="{{ "js/modal.js" | relURL }}"></script>
 </body>
 </html>

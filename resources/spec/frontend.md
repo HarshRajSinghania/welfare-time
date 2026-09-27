@@ -54,11 +54,12 @@
   - `filter.js`：絞り込みの状態と判定
   - `sort.js`：並び替え
   - `main.js`：データの読み込み、描画、全体の制御
+  - `modal.js`：モーダルの開閉。開くボタンに `data-modal-open="モーダルのid"`、閉じるボタンに `data-modal-close` を付けます。
 - **パスは `window.BASE_PATH` から作ります。** サブパス（`/welfare-time/`）で配信しているため、リソースやAPIのパスはすべて `BASE_PATH` を前置します。`BASE_PATH` は `baseof.html` が `relURL` で求めて渡します。
 - **データで動かします。** 建物の座標などはマスター（`assets/facilities.json`）を非同期に読み込み、JavaScript にハードコードしません。
 - **イベントは委譲します。** 店舗の一覧（`#shop-grid`）にイベントリスナーを一度だけ登録し、`mouseover` や `mouseout` でカードへの操作を検知します。要素ごとに `onmouseenter` などを設定しません。
 - **描画の完了を保証します。** `render()` はDOMを作り終えてから、引数で受け取ったコールバックを同期的に実行します。マップの操作の初期化は、このコールバックの中で行います。
-- **テンプレートにスクリプトを書きません。** `layouts/` 配下のHTMLにインラインの JavaScript を残しません。ただし、`baseof.html` でのスクリプトの読み込みと `BASE_PATH` の設定は除きます。
+- **テンプレートにスクリプトを書きません。** `layouts/` 配下のHTMLにインラインの JavaScript や `onclick` などのイベント属性を残しません。ただし、`baseof.html` でのスクリプトの読み込みと `BASE_PATH` の設定、Google Analytics の計測タグ（`partials/google_analytics.html`）は除きます。
 
 ## CSS の規約
 
@@ -78,5 +79,4 @@
 | [#59](https://github.com/tamadalab/welfare-time/issues/59) | `render()` が描画完了のコールバックを受け取らず、マップの操作の初期化を直接呼んでいます。 |
 | [#60](https://github.com/tamadalab/welfare-time/issues/60) | `main.js` が、カードやマップの画像の `style.opacity` を直接書き換えています。Tailwind のクラスの付け外しに移す必要があります。 |
 | [#61](https://github.com/tamadalab/welfare-time/issues/61) | マップのページに、使われていない `#tooltip` の要素が残っています。`layouts/_default/map.html` はファイル全体が使われていません。 |
-| [#62](https://github.com/tamadalab/welfare-time/issues/62) | `baseof.html` に、モーダルを開閉するインラインの JavaScript と、`onclick` 属性が残っています。 |
 | [#63](https://github.com/tamadalab/welfare-time/issues/63) | `static/assets/style.css` の先頭のコメントに、旧名の「Shikaku」が残っています。 |
