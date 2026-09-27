@@ -19,6 +19,9 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
+      - name: just をセットアップする
+        uses: extractions/setup-just@v4
+
       - name: 依存パッケージをインストールする
         # テストは pdfplumber と beautifulsoup4 だけを使うが、requirements.txt が
         # そのまま通ることも確認したいので全部入れる。
@@ -26,4 +29,4 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: テストを実行する
-        run: make test PYTHON=python
+        run: just PYTHON=python test

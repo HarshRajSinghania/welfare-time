@@ -35,7 +35,7 @@
 
 ## Data Pipeline
 
-すべて `make` から実行します。単体のスクリプトを直接呼ぶ想定ではありません。
+すべて `just` から実行します。単体のスクリプトを直接呼ぶ想定ではありません。
 
 | Script | Input | Output |
 | :--- | :--- | :--- |
@@ -64,25 +64,25 @@
 
 ### ベースURL
 
-サイトのURLは `hugo.toml` の `baseURL` を唯一の情報源とします。`Makefile` は `hugo config` から導出し、フロントエンドは `layouts/_default/baseof.html` が `relURL` で解決した値を `window.BASE_PATH` として渡します。**どこにもハードコードしないでください。**
+サイトのURLは `hugo.toml` の `baseURL` を唯一の情報源とします。`Justfile` は `hugo config` から導出し、フロントエンドは `layouts/_default/baseof.html` が `relURL` で解決した値を `window.BASE_PATH` として渡します。**どこにもハードコードしないでください。**
 
 サブパス（`/welfare-time/`）で配信しているため、ルート絶対パス（`/foo.png`）は常に誤りになります。
 
 ## Workflow Rules
 
-- **削除操作:** 生成物の削除は許容します。`make clean` は `data/` を、デプロイ時は `public/api/` を削除して作り直します。追跡対象のファイルやデータを消す変更は、事前に確認を取ってください。特に `data/kitchen_cars_past.json` は復元不能です。
+- **削除操作:** 生成物の削除は許容します。`just clean` は `data/` 配下の生成物（`data/cafeterias/` と `data/kitchencars/`）を、デプロイ時は `public/api/` を削除して作り直します。追跡対象のファイルやデータを消す変更は、事前に確認を取ってください。特に `data/kitchen_cars_past.json` は復元不能です。
 - **入力パス:** スクリプト内にハードコードせず、CLI引数（`argparse`）で受け取ります。
 - **出力パス:** 既定は標準出力とし、ファイル出力は `-o` / `--output` で指定します。
 - **正規化:** 上記の `squash_name` / `squash_field` を必ず適用します。
-- **回帰テスト:** 解析処理を変更したら `make test` を実行します。食堂パーサとキッチンカーのスクレイパーの両方が対象です。
-- **状態管理:** PDFの取得状況は `data/pdfs/.metadata.json` で追跡します。`make generate` がこれを `static/daily/` へコピーし、`generator.py` が出力先から読みます。
+- **回帰テスト:** 解析処理を変更したら `just test` を実行します。食堂パーサとキッチンカーのスクレイパーの両方が対象です。
+- **状態管理:** PDFの取得状況は `data/pdfs/.metadata.json` で追跡します。`just generate` がこれを `static/daily/` へコピーし、`generator.py` が出力先から読みます。
 
 ## Notes for Testing
 
-夏期休暇中は情報源の出店が0件になるため、実データでスクレイパーを動かしても出店をループする本体を一度も通りません。**この期間、実データでの動作確認は不具合の検出にほとんど役立ちません。** `testdata/kitchen_cars_sample.html` を使う `make test` で確認してください。
+夏期休暇中は情報源の出店が0件になるため、実データでスクレイパーを動かしても出店をループする本体を一度も通りません。**この期間、実データでの動作確認は不具合の検出にほとんど役立ちません。** `testdata/kitchen_cars_sample.html` を使う `just test` で確認してください。
 
-`make test` は `PYTHON` 変数が指すインタプリタで動きます。依存関係を入れた環境を指定してください。
+`just test` は `PYTHON` 変数が指すインタプリタで動きます。依存関係を入れた環境を指定してください。
 
 ```bash
-make test PYTHON=/path/to/venv/bin/python
+just PYTHON=/path/to/venv/bin/python test
 ```
