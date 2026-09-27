@@ -7,6 +7,8 @@ const LABE_CLOSED = '🔵 営業終了';
 
 let currentData = null;
 let master = null;
+// 描画したカードの id を並び順に持つ。マップで先頭に移したカードを元の順に戻すのに使う。
+let renderedCardIds = [];
 
 // Path detection
 const currentPath = window.location.pathname.replace(/\/$/, '');
@@ -122,7 +124,9 @@ async function fetchData() {
             Filter.initUI(categories, render);
             Sort.initUI(render);
             
-            render();
+            // マップの操作は、最初の描画が終わってから一度だけ初期化する。
+            // イベントは一覧とマップに委譲するので、描き直すたびに初期化し直す必要はない。
+            render(isMapPage ? initMapInteractions : undefined);
             renderProvenance(currentData.sources);
         } else if (shopGrid) {
             shopGrid.innerHTML = '<div class="col-span-full text-center text-slate-400 py-12">営業予定が見つかりませんでした</div>';
@@ -142,7 +146,11 @@ async function fetchData() {
     }
 }
 
-function render() {
+/**
+ * 店舗の一覧を描画する。
+ * @param {Function} [onRendered] - DOM を作り終えたあとに同期的に実行するコールバック
+ */
+function render(onRendered) {
     if (!currentData) return;
     const grid = document.getElementById('shop-grid');
     if (!grid) return;
@@ -160,8 +168,10 @@ function render() {
     // 2. Sort
     allShops = Sort.sort(allShops, getLabel, LABE_NOW_OPEN);
 
+    renderedCardIds = allShops.map(shop => 'card-' + shop.id);
     if (allShops.length === 0) {
         grid.innerHTML = '<div class="col-span-full text-center text-slate-400 py-12 font-medium bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">条件に一致する店舗がありません</div>';
+        if (onRendered) onRendered();
         return;
     }
 
@@ -223,10 +233,7 @@ function render() {
         grid.insertAdjacentHTML('beforeend', html);
     });
 
-    const isMap = window.location.pathname.includes('/map/');
-    if (isMap && typeof initMapInteractions === 'function') {
-        initMapInteractions(allShops);
-    }
+    if (onRendered) onRendered();
 }
 
 function renderProvenance(sources) {
@@ -311,67 +318,111 @@ function updateOverlay() {
     });
 }
 
-async function initMapInteractions(displayedShops) {
+const CARD_SELECTOR = '[id^="card-"]';
+const HIGHLIGHTED_CARD_CLASSES = ['ring-2', 'ring-ksu', 'dark:ring-blue-500'];
+// 場所がこの値の施設（キッチンカー）は、ピロティの建物に対応づける
+const KITCHEN_CAR_LOCATION = '大学内指定場所';
+const KITCHEN_CAR_BUILDING = 'pilotis';
+
+/** カードの施設がある建物の id を返す。マップ外なら null。 */
+function findBuildingOfCard(card) {
+    const shopId = card.id.replace('card-', '');
+    const buildingId = Object.keys(master.buildings).find(k => master.buildings[k].shops.includes(shopId));
+    if (buildingId) return buildingId;
+    return card.dataset.location === KITCHEN_CAR_LOCATION ? KITCHEN_CAR_BUILDING : null;
+}
+
+/**
+ * container の中の selector に合う要素に、カーソルが入った・出たときの処理をイベント委譲で登録する。
+ * mouseover / mouseout は子要素の間を移るたびに発生するので、移った先（relatedTarget）が
+ * 同じ要素の中なら無視し、mouseenter / mouseleave と同じ動きにする。
+ */
+function delegateHover(container, selector, onEnter, onLeave) {
+    const handle = (e, callback) => {
+        const el = e.target.closest(selector);
+        if (!el || !container.contains(el) || el.contains(e.relatedTarget)) return;
+        callback(el);
+    };
+    container.addEventListener('mouseover', e => handle(e, onEnter));
+    container.addEventListener('mouseout', e => handle(e, onLeave));
+}
+
+/** 建物の施設のカードを強調して一覧の先頭に移し、ほかのカードを薄くする。 */
+function highlightBuilding(buildingId, shopGrid) {
+    const cards = Array.from(shopGrid.querySelectorAll(CARD_SELECTOR));
+    const matched = cards.filter(card => findBuildingOfCard(card) === buildingId);
+    cards.forEach(card => {
+        const isMatch = matched.includes(card);
+        card.classList.toggle(DIMMED_CARD_CLASS, !isMatch);
+        HIGHLIGHTED_CARD_CLASSES.forEach(c => card.classList.toggle(c, isMatch));
+    });
+    // 先頭に移すときは後ろから順に入れ、強調したカードどうしの並び順を保つ
+    matched.reverse().forEach(card => shopGrid.prepend(card));
+}
+
+/** 建物の強調を解除し、カードを描画したときの並び順に戻す。一覧は描き直さない。 */
+function clearBuildingHighlight(shopGrid) {
+    shopGrid.querySelectorAll(CARD_SELECTOR).forEach(card => {
+        card.classList.remove(DIMMED_CARD_CLASS, ...HIGHLIGHTED_CARD_CLASSES);
+    });
+    renderedCardIds.forEach(id => {
+        const card = document.getElementById(id);
+        if (card) shopGrid.appendChild(card);
+    });
+}
+
+/** カードの施設の建物を強調する。マップ外なら、マップを薄くしてその旨を表示する。 */
+function highlightCard(card, shopGrid) {
+    const buildingId = findBuildingOfCard(card);
+    const feedbackOverlay = document.getElementById('map-feedback-overlay');
+    const mapImg = document.querySelector('#map-wrapper img');
+    if (buildingId) {
+        document.getElementById('area-' + buildingId)?.classList.add('highlighted');
+        if (feedbackOverlay) feedbackOverlay.classList.add('hidden');
+        if (mapImg) mapImg.classList.remove(DIMMED_MAP_CLASS);
+    } else {
+        if (feedbackOverlay) {
+            feedbackOverlay.classList.remove('hidden');
+            feedbackOverlay.classList.add('flex');
+        }
+        if (mapImg) mapImg.classList.add(DIMMED_MAP_CLASS);
+    }
+    shopGrid.querySelectorAll(CARD_SELECTOR).forEach(c => c.classList.toggle(DIMMED_CARD_CLASS, c !== card));
+}
+
+/** カードの強調を解除する。 */
+function clearCardHighlight(shopGrid, overlay) {
+    overlay.querySelectorAll('.building-area').forEach(area => area.classList.remove('highlighted'));
+    const feedbackOverlay = document.getElementById('map-feedback-overlay');
+    const mapImg = document.querySelector('#map-wrapper img');
+    if (feedbackOverlay) {
+        feedbackOverlay.classList.add('hidden');
+        feedbackOverlay.classList.remove('flex');
+    }
+    if (mapImg) mapImg.classList.remove(DIMMED_MAP_CLASS);
+    shopGrid.querySelectorAll(CARD_SELECTOR).forEach(c => c.classList.remove(DIMMED_CARD_CLASS));
+}
+
+/** マップの建物の範囲を作り、一覧とマップの連動を登録する。一度だけ呼ぶ。 */
+function initMapInteractions() {
     const overlay = document.getElementById('overlay');
     const shopGrid = document.getElementById('shop-grid');
     if (!overlay || !shopGrid || !master) return;
+
     overlay.innerHTML = '';
-    
-    Object.entries(master.buildings).forEach(([id, b]) => {
+    Object.keys(master.buildings).forEach(id => {
         const div = document.createElement('div');
-        div.className = 'building-area'; 
+        div.className = 'building-area';
         div.id = 'area-' + id;
         overlay.appendChild(div);
-        
-        div.onmouseenter = () => {
-            const matchedShops = displayedShops.filter(s => (id === 'pilotis' && s.location === '大学内指定場所') || b.shops.includes(s.id));
-            const matchedIds = matchedShops.map(s => 'card-' + s.id);
-            shopGrid.querySelectorAll('[id^="card-"]').forEach(card => {
-                const isMatch = matchedIds.includes(card.id);
-                card.classList.toggle(DIMMED_CARD_CLASS, !isMatch);
-                if (isMatch) { 
-                    card.classList.add('ring-2', 'ring-ksu', 'dark:ring-blue-500'); 
-                    shopGrid.prepend(card); 
-                }
-            });
-        };
-        div.onmouseleave = () => render();
     });
 
-    shopGrid.querySelectorAll('[id^="card-"]').forEach(card => {
-        card.onmouseenter = () => {
-            const shopId = card.id.replace('card-', '');
-            let bId = Object.keys(master.buildings).find(k => master.buildings[k].shops.includes(shopId));
-            if (!bId && card.dataset.location === '大学内指定場所') bId = 'pilotis';
-            
-            const feedbackOverlay = document.getElementById('map-feedback-overlay');
-            const mapImg = document.querySelector('#map-wrapper img');
-            if (bId) {
-                const area = document.getElementById('area-' + bId);
-                if (area) area.classList.add('highlighted');
-                if (feedbackOverlay) feedbackOverlay.classList.add('hidden');
-                if (mapImg) mapImg.classList.remove(DIMMED_MAP_CLASS);
-            } else {
-                if (feedbackOverlay) {
-                    feedbackOverlay.classList.remove('hidden');
-                    feedbackOverlay.classList.add('flex');
-                }
-                if (mapImg) mapImg.classList.add(DIMMED_MAP_CLASS);
-            }
-            shopGrid.querySelectorAll('[id^="card-"]').forEach(c => c.classList.toggle(DIMMED_CARD_CLASS, c !== card));
-        };
-        card.onmouseleave = () => {
-            overlay.querySelectorAll('.building-area').forEach(area => area.classList.remove('highlighted'));
-            const feedbackOverlay = document.getElementById('map-feedback-overlay');
-            const mapImg = document.querySelector('#map-wrapper img');
-            if (feedbackOverlay) {
-                feedbackOverlay.classList.add('hidden');
-                feedbackOverlay.classList.remove('flex');
-            }
-            if (mapImg) mapImg.classList.remove(DIMMED_MAP_CLASS);
-            shopGrid.querySelectorAll('[id^="card-"]').forEach(c => c.classList.remove(DIMMED_CARD_CLASS));
-        };
-    });
+    delegateHover(overlay, '.building-area',
+        area => highlightBuilding(area.id.replace('area-', ''), shopGrid),
+        () => clearBuildingHighlight(shopGrid));
+    delegateHover(shopGrid, CARD_SELECTOR,
+        card => highlightCard(card, shopGrid),
+        () => clearCardHighlight(shopGrid, overlay));
     updateOverlay();
 }
 
