@@ -124,7 +124,7 @@ async function fetchData() {
             // 絞り込みや並び替えで描き直したときは、マップの強調をカーソルの位置に合わせ直す
             const rerender = () => render(isMapPage ? syncMapHighlight : undefined);
             Filter.initUI(categories, rerender);
-            Sort.initUI(rerender);
+            Sort.initUI(rerender, categories);
             
             // マップの操作は、最初の描画が終わってから一度だけ初期化する。
             // イベントは一覧とマップに委譲するので、描き直すたびに初期化し直す必要はない。
