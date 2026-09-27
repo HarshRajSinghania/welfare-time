@@ -86,6 +86,18 @@ make test PYTHON=/path/to/venv/bin/python
 
 `make help` で一覧を表示します。`make stale_api` は、gh-pages で配信されているが現在は生成されなくなったAPIファイルを検出します。
 
+## バージョン
+
+機能と変更点は [CHANGELOG.md](CHANGELOG.md) にまとめています。サイトでは、ヘルプの [変更履歴](https://tamadalab.github.io/welfare-time/help/changelog/) のページにこのファイルの内容をそのまま表示します。
+
+バージョン番号は `package.json` の `version` だけで管理し、サイトのフッタはこの値を表示します。フッタのコード最終更新日時は、`make build_html` の実行時に main の履歴から求めます。`data/` だけを変更したコミットは対象外なので、毎朝の自動更新では変わりません。
+
+リリースするときは次の手順で行います。
+
+1. `CHANGELOG.md` に新しいバージョンの変更点を追記します。
+2. `package.json` の `version` を上げます。
+3. main にマージしたあと、`v0.4.0` のようにタグを打ちます。
+
 ## ディレクトリ構成
 
 | パス | 内容 |

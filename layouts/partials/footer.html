@@ -5,5 +5,12 @@
         <a href="https://github.com/tamadalab/welfare-time" class="font-bold text-ksu dark:text-blue-400 hover:underline" target="_blank">
             <i class="bi bi-github"></i> GitHub
         </a>
+        {{/* バージョンは package.json を唯一の定義とする。最終更新日時はビルド時に Makefile が渡す */}}
+        {{- $version := (os.ReadFile "package.json" | transform.Unmarshal).version }}
+        <span class="hidden md:inline text-slate-200 dark:text-slate-700">|</span>
+        <span>
+            <a href="{{ "help/changelog/" | relURL }}" class="text-ksu dark:text-blue-400 hover:underline" title="変更履歴">v{{ $version }}</a>
+            {{- with site.Params.codeupdated }}（コード最終更新：{{ . }}）{{ end }}
+        </span>
     </div>
 </footer>
