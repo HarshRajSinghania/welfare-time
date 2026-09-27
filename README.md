@@ -88,7 +88,7 @@ make test PYTHON=/path/to/venv/bin/python
 
 ## バージョン
 
-機能と変更点は [CHANGELOG.md](CHANGELOG.md) にまとめています。
+機能と変更点は [CHANGELOG.md](CHANGELOG.md) にまとめています。サイトでは、ヘルプの [変更履歴](https://tamadalab.github.io/welfare-time/help/changelog/) のページにこのファイルの内容をそのまま表示します。
 
 バージョン番号は `package.json` の `version` だけで管理し、サイトのフッタはこの値を表示します。フッタのコード最終更新日時は、`make build_html` の実行時に main の履歴から求めます。`data/` だけを変更したコミットは対象外なので、毎朝の自動更新では変わりません。
 

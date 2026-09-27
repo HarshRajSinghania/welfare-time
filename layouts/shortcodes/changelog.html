@@ -1,0 +1,6 @@
+{{- /*
+  リポジトリ直下の CHANGELOG.md を埋め込む。変更履歴の本文は CHANGELOG.md だけで管理する。
+  ページのタイトルはテンプレートが h1 で出すので、ファイル先頭の h1 は取り除く。
+*/ -}}
+{{- $md := os.ReadFile "CHANGELOG.md" | replaceRE `\A# [^\n]*\n` "" -}}
+{{- $md | .Page.RenderString -}}
