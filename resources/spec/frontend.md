@@ -70,11 +70,13 @@
 
 ## 未対応の課題
 
-上の規約のうち、まだコードが追いついていないものです。直すときは、この一覧も更新します。
+上の規約のうち、まだコードが追いついていないものです。それぞれ issue で管理しています。直したら、この一覧からも削除します。
 
-- `main.js` は、建物の範囲とカードに `onmouseenter` と `onmouseleave` を1つずつ設定しています。`#shop-grid` へのイベント委譲に移す必要があります。
-- `render()` は描画完了のコールバックを受け取りません。
-- `main.js` が、カードやマップの画像の `style.opacity` を直接書き換えています。Tailwind のクラスの付け外しに移す必要があります。
-- マップのページ（`layouts/map/single.html`、`layouts/_default/map.html`）に、使われていない `#tooltip` の要素が残っています。
-- `baseof.html` に、モーダルを開閉するインラインの JavaScript（`openModal`、`closeModal`）が残っています。
-- `static/assets/style.css` の先頭のコメントに、旧名の「Shikaku」が残っています。
+| issue | 内容 |
+| :--- | :--- |
+| [#58](https://github.com/tamadalab/welfare-time/issues/58) | `main.js` が、建物の範囲とカードに `onmouseenter` と `onmouseleave` を1つずつ設定しています。`#shop-grid` へのイベント委譲に移す必要があります。 |
+| [#59](https://github.com/tamadalab/welfare-time/issues/59) | `render()` が描画完了のコールバックを受け取らず、マップの操作の初期化を直接呼んでいます。 |
+| [#60](https://github.com/tamadalab/welfare-time/issues/60) | `main.js` が、カードやマップの画像の `style.opacity` を直接書き換えています。Tailwind のクラスの付け外しに移す必要があります。 |
+| [#61](https://github.com/tamadalab/welfare-time/issues/61) | マップのページに、使われていない `#tooltip` の要素が残っています。`layouts/_default/map.html` はファイル全体が使われていません。 |
+| [#62](https://github.com/tamadalab/welfare-time/issues/62) | `baseof.html` に、モーダルを開閉するインラインの JavaScript と、`onclick` 属性が残っています。 |
+| [#63](https://github.com/tamadalab/welfare-time/issues/63) | `static/assets/style.css` の先頭のコメントに、旧名の「Shikaku」が残っています。 |
