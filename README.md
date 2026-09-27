@@ -96,7 +96,7 @@ make test PYTHON=/path/to/venv/bin/python
 
 1. `CHANGELOG.md` に新しいバージョンの変更点を追記します。
 2. `package.json` の `version` を上げます。
-3. main にマージしたあと、`v1.1.0` のようにタグを打ちます。
+3. main にマージしたあと、`v0.4.0` のようにタグを打ちます。
 
 ## ディレクトリ構成
 
