@@ -64,7 +64,7 @@
 
 ### ベースURL
 
-サイトのURLは `hugo.toml` の `baseURL` を唯一の情報源とします。`justfile` は `hugo config` から導出し、フロントエンドは `layouts/_default/baseof.html` が `relURL` で解決した値を `window.BASE_PATH` として渡します。**どこにもハードコードしないでください。**
+サイトのURLは `hugo.toml` の `baseURL` を唯一の情報源とします。`Justfile` は `hugo config` から導出し、フロントエンドは `layouts/_default/baseof.html` が `relURL` で解決した値を `window.BASE_PATH` として渡します。**どこにもハードコードしないでください。**
 
 サブパス（`/welfare-time/`）で配信しているため、ルート絶対パス（`/foo.png`）は常に誤りになります。
 
