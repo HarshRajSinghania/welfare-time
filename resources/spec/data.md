@@ -50,7 +50,7 @@
 | `scripts/scrape_kitchen_cars.py` | `data/kitchencars/raw.html` | `data/kitchencars/scraped.json` |
 | `scripts/generator.py` | 上記の2つ、アーカイブ、マスター | `static/api/` |
 
-`generator.py` の必須引数は6つあります。`--cafeteria-dir`、`--kitchen-cars`、`--kitchen-cars-archive`、`--master`、`--base-url`、出力先の `-o` です。`data/cafeterias/` と `data/kitchencars/` は追跡対象外の中間生成物で、毎回作り直します。
+`generator.py` の必須引数は6つあります。`--cafeteria-dir`、`--kitchen-cars`、`--kitchen-cars-archive`、`--master`、`--base-url`、出力先の `-o` です。`data/cafeterias/` と `data/kitchencars/` は追跡対象外の中間生成物です。`just` の解析のレシピは、入力（PDFやHTML）が出力より新しいときだけ解析し直します。作り直したいときは `just clean` で削除します。CI は毎回リポジトリを取得し直すため、毎朝すべてを解析します。
 
 生成後、Hugo が `static/` を `public/` へコピーし、`public/` を gh-pages ブランチとして公開します。
 
