@@ -69,7 +69,7 @@ Welfare TIME のデータを活用するためのAPIエンドポイントです�
   "sources": [
     {
       "name": "2026_05.pdf",
-      "url": "daily/2026_05.pdf"
+      "url": "https://tamadalab.github.io/welfare-time/daily/2026_05.pdf"
     }
   ]
 }
