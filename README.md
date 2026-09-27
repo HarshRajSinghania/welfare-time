@@ -16,16 +16,16 @@
 
 ## データパイプライン
 
-すべて `make` から実行します。
+すべて [just](https://github.com/casey/just) から実行します。
 
 | 段階 | コマンド | 処理 | 出力先 |
 | --- | --- | --- | --- |
-| Fetch | `make fetch_pdf` | 大学サイトからPDFを取得 | `data/pdfs/` |
-| Fetch | `make fetch_kitchencar` | Playwright でJS描画後のHTMLを取得 | `data/kitchencars/raw.html` |
-| Parse | `make parse_pdf` | PDFを解析 | `data/cafeterias/*.json` |
-| Scrape | `make parse_kitchencar` | HTMLを解析 | `data/kitchencars/scraped.json` |
-| Generate | `make generate` | 統合してAPIを生成 | `static/api/` |
-| Build | `make build_html` | Tailwind CSS と Hugo でサイトを生成 | `public/` |
+| Fetch | `just fetch_pdf` | 大学サイトからPDFを取得 | `data/pdfs/` |
+| Fetch | `just fetch_kitchencar` | Playwright でJS描画後のHTMLを取得 | `data/kitchencars/raw.html` |
+| Parse | `just parse_pdf` | PDFを解析 | `data/cafeterias/*.json` |
+| Scrape | `just parse_kitchencar` | HTMLを解析 | `data/kitchencars/scraped.json` |
+| Generate | `just generate` | 統合してAPIを生成 | `static/api/` |
+| Build | `just build_html` | Tailwind CSS と Hugo でサイトを生成 | `public/` |
 
 `static/api/` に生成されたファイルを Hugo が `public/` へコピーし、`public/` を gh-pages ブランチとして公開しています。
 
@@ -48,8 +48,9 @@
 以下が必要です。バージョンは [ワークフロー](.github/workflows/daily_update.yml) で使用しているものです。
 
 - Python 3.11
-- Hugo 0.119.0（extended）— サイト生成に加え、`make generate` がベースURLの取得に使います
+- Hugo 0.119.0（extended）— サイト生成に加え、`just generate` がベースURLの取得に使います
 - Node 26 — Tailwind CSS のビルドに使います
+- [just](https://github.com/casey/just) — タスクの実行に使います（`brew install just` などで入れてください）
 
 ### セットアップ
 
@@ -59,38 +60,38 @@ playwright install chromium
 npm ci
 ```
 
-`playwright install chromium` は `make fetch_kitchencar` に必要です。
+`playwright install chromium` は `just fetch_kitchencar` に必要です。
 
 ### ローカルでの確認
 
 ```bash
-make generate
-make serve
+just generate
+just serve
 ```
 
-`make serve` は Hugo の開発サーバーを起動します（<http://localhost:1313/welfare-time/>）。
+`just serve` は Hugo の開発サーバーを起動します（<http://localhost:1313/welfare-time/>）。
 
 ### テスト
 
 ```bash
-make test
+just test
 ```
 
-食堂PDFのパーサとキッチンカーのスクレイパーの回帰テストを実行します。`make` の `PYTHON` 変数が指すインタプリタで動くため、依存関係を入れた環境を指定してください。
+食堂PDFのパーサとキッチンカーのスクレイパーの回帰テストを実行します。`just` の `PYTHON` 変数が指すインタプリタで動くため、依存関係を入れた環境を指定してください。
 
 ```bash
-make test PYTHON=/path/to/venv/bin/python
+just PYTHON=/path/to/venv/bin/python test
 ```
 
 ### その他のコマンド
 
-`make help` で一覧を表示します。`make stale_api` は、gh-pages で配信されているが現在は生成されなくなったAPIファイルを検出します。
+`just help` で一覧を表示します。`just stale_api` は、gh-pages で配信されているが現在は生成されなくなったAPIファイルを検出します。
 
 ## バージョン
 
 機能と変更点は [CHANGELOG.md](CHANGELOG.md) にまとめています。サイトでは、ヘルプの [変更履歴](https://tamadalab.github.io/welfare-time/help/changelog/) のページにこのファイルの内容をそのまま表示します。
 
-バージョン番号は `package.json` の `version` だけで管理し、サイトのフッタはこの値を表示します。フッタのコード最終更新日時は、`make build_html` の実行時に main の履歴から求めます。`data/` だけを変更したコミットは対象外なので、毎朝の自動更新では変わりません。
+バージョン番号は `package.json` の `version` だけで管理し、サイトのフッタはこの値を表示します。フッタのコード最終更新日時は、`just build_html` の実行時に main の履歴から求めます。`data/` だけを変更したコミットは対象外なので、毎朝の自動更新では変わりません。
 
 リリースするときは次の手順で行います。
 

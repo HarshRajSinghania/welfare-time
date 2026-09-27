@@ -29,6 +29,9 @@ jobs:
           hugo-version: '0.119.0'
           extended: true
 
+      - name: just をセットアップする
+        uses: extractions/setup-just@v4
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
@@ -41,17 +44,17 @@ jobs:
 
       - name: 食堂データを更新する
         run: |
-          make fetch_cafeteria
-          make parse_pdf
+          just fetch_cafeteria
+          just parse_pdf
 
       - name: キッチンカーデータを更新する
         run: |
-          make fetch_kitchencar
-          make parse_kitchencar
+          just fetch_kitchencar
+          just parse_kitchencar
 
       - name: APIデータを生成する
         run:
-          make generate
+          just generate
 
       - name: キッチンカーのアーカイブをmainにコミットする
         run: |
@@ -85,7 +88,7 @@ jobs:
           # 残り続けないようにする。daily配下のPDFは累積するため消さない。
           rm -rf public/api
 
-          make build_html
+          just build_html
 
       - name: commit and push changes
         run: |

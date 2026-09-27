@@ -6,9 +6,9 @@ shop id therefore leaves the old file behind, still served over HTTP but
 referenced by nothing.
 
 The generated output is the only authority on what should exist, so run
-`make generate` first and compare its output against the deployed branch:
+`just generate` first and compare its output against the deployed branch:
 
-    make generate
+    just generate
     python3 scripts/find_stale_api.py
 
 Note that a file being stale is a property of the *current* data. Restoring
@@ -45,7 +45,7 @@ def find_stale(output_dir, branch, prefix):
     deployed = deployed_files(branch, prefix)
     generated = generated_files(output_dir, prefix)
     if not generated:
-        print(f"No generated files under {output_dir}/{prefix}. Run 'make generate' first.",
+        print(f"No generated files under {output_dir}/{prefix}. Run 'just generate' first.",
               file=sys.stderr)
         sys.exit(2)
     return sorted(deployed - generated), sorted(generated - deployed), deployed, generated
