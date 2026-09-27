@@ -77,6 +77,5 @@
 | :--- | :--- |
 | [#58](https://github.com/tamadalab/welfare-time/issues/58) | `main.js` が、建物の範囲とカードに `onmouseenter` と `onmouseleave` を1つずつ設定しています。`#shop-grid` へのイベント委譲に移す必要があります。 |
 | [#59](https://github.com/tamadalab/welfare-time/issues/59) | `render()` が描画完了のコールバックを受け取らず、マップの操作の初期化を直接呼んでいます。 |
-| [#60](https://github.com/tamadalab/welfare-time/issues/60) | `main.js` が、カードやマップの画像の `style.opacity` を直接書き換えています。Tailwind のクラスの付け外しに移す必要があります。 |
 | [#61](https://github.com/tamadalab/welfare-time/issues/61) | マップのページに、使われていない `#tooltip` の要素が残っています。`layouts/_default/map.html` はファイル全体が使われていません。 |
 | [#63](https://github.com/tamadalab/welfare-time/issues/63) | `static/assets/style.css` の先頭のコメントに、旧名の「Shikaku」が残っています。 |
