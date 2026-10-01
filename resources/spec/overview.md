@@ -14,7 +14,7 @@
 | 食堂・コンビニ・ショップなど | [大学サイトの福利厚生のページ](https://www.kyoto-su.ac.jp/campus/welfare/)からリンクされたPDF | HTTP ヘッダで更新を確認し、更新されていればダウンロードして解析します。 |
 | キッチンカー | [SHOP STOP の京都産業大学のページ](https://schedule.mellow.jp/ss_web/markets/KqTl8N) | Playwright でJSの描画を待ってからHTMLを取得し、解析します。単日出店と定期出店の2つの欄があります。 |
 | ATM | マスター（`scripts/facilities.json`）の `static-hours` | 営業時間が決まっている施設は、平日と土曜の営業時間から毎日の予定を作ります。 |
-| 臨時店舗 | `data/extra/*.json` | 常設ではない店舗や、大学当局の管理外の店舗を、リポジトリに置いた JSON から載せます。 |
+| 臨時店舗 | `data/extra/*.json` | 常設ではない店舗や、大学の管理外の店舗を、リポジトリに置いた JSON から載せます。 |
 
 ## システム構成
 
