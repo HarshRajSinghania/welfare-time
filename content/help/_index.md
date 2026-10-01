@@ -58,7 +58,8 @@ type: "help"
 ## その他
 
 - [📱 スマートフォンでのアプリ化](install)
-- [🏪 臨時店舗を載せたいとき](extra-shops)（JSON の書き方と依頼の手順）
+- [🏪 臨時店舗を載せたいとき](extra-shops)（依頼の手順と JSON の書き方）
+- [🧰 臨時店舗の JSON を作る](extra-shops-form)（フォームで JSON を作り、表示例を確認）
 - [💻 API 利用ガイド](api)（開発者向け情報）
 - [📝 変更履歴](changelog)（バージョンごとの機能と変更点）
 - [🔒 プライバシーポリシー](privacy)（Cookie とアクセス解析の取り扱い）

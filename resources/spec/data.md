@@ -68,7 +68,7 @@ JSON は1日分のエントリの配列です。複数日に営業する店舗�
 | `name` | 必須 | 店名 |
 | `date` | 必須 | `YYYY-MM-DD` |
 | `location` | 必須 | 場所。建物名で始めると、マップのその建物と連動します（例：`並楽館前`）。学外など、該当する建物がなければ、マップ外として扱います。 |
-| `start_time`、`end_time` | 必須 | `HH:MM` |
+| `start_time`、`end_time` | 必須 | `HH:MM`。`end_time` は `start_time` より後にします。 |
 | `category` | 任意 | 既存のカテゴリ。省略すると `ショップ` |
 | `headline`、`url`、`note` | 任意 | `url` は `http://` または `https://` で始めます。 |
 | `business_hours` | 任意 | 省略すると `start_time～end_time` |
@@ -77,6 +77,7 @@ JSON は1日分のエントリの配列です。複数日に営業する店舗�
 - 出力には `temporary: true` が付き、サイトのカードに「臨時」と表示します。
 - カードは HTML として組み立てるため、`<` と `>` を含む項目は受け付けません。
 - 過去の日付のファイルも消さずに残します。その日に何が営業していたかの記録になります。
+- ヘルプの「臨時店舗の JSON を作る」（`static/js/extra_form.js`）は、この規則と同じ検証をブラウザで行い、JSON と表示例を作るフォームです。規則を変えるときは、`generator.py` の `validate_extra_entry()` とフォームの両方を直します。
 
 ## データパイプライン
 

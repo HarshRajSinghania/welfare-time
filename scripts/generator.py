@@ -225,6 +225,10 @@ EXTRA_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 EXTRA_TIME_PATTERN = re.compile(r"^\d{1,2}:\d{2}$")
 EXTRA_TEXT_FIELDS = ("name", "location", "category", "headline", "url", "note")
 
+def to_minutes(hhmm):
+    hours, minutes = hhmm.split(":")
+    return int(hours) * 60 + int(minutes)
+
 def validate_extra_entry(raw):
     """Normalize one entry of data/extra/*.json. Returns (entry, error)."""
     if not isinstance(raw, dict):
@@ -251,6 +255,8 @@ def validate_extra_entry(raw):
     for key in ("start_time", "end_time"):
         if not EXTRA_TIME_PATTERN.match(raw[key]):
             return None, f"{key} '{raw[key]}' は HH:MM の形式ではありません"
+    if to_minutes(raw["start_time"]) >= to_minutes(raw["end_time"]):
+        return None, f"end_time '{raw['end_time']}' は start_time '{raw['start_time']}' より後にしてください"
     url = raw.get("url", "")
     if url and not re.match(r"^https?://", url):
         return None, "url は http:// または https:// で始めてください"
