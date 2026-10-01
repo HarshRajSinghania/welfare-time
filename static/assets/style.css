@@ -9,15 +9,17 @@
     cursor: pointer;
     pointer-events: auto;
     border: 2px solid transparent;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* box-shadow は含めない。含めると、マスクが建物の周りから外へ広がる動きになる */
+    transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 4px;
 }
 
-.building-area:hover, 
+/* 強調した建物は明るいまま残し、その外側（マップ全体）を巨大な影で暗くする。
+   はみ出した影は #map-wrapper の overflow-hidden で切り取られる。 */
+.building-area:hover,
 .building-area.highlighted {
-    background-color: rgba(59, 130, 246, 0.25);
     border-color: #3b82f6;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 0 100vmax rgba(15, 23, 42, 0.55);
     z-index: 50;
 }
 
