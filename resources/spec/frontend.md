@@ -96,7 +96,4 @@
 
 上の規約のうち、まだコードが追いついていないものです。それぞれ issue で管理しています。直したら、この一覧からも削除します。
 
-| issue | 内容 |
-| :--- | :--- |
-| [#61](https://github.com/tamadalab/welfare-time/issues/61) | マップのページに、使われていない `#tooltip` の要素が残っています。`layouts/_default/map.html` はファイル全体が使われていません。 |
-| [#63](https://github.com/tamadalab/welfare-time/issues/63) | `static/assets/style.css` の先頭のコメントに、旧名の「Shikaku」が残っています。 |
+現在、未対応の課題はありません。
