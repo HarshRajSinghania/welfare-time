@@ -76,6 +76,7 @@
   - `filter.js`：絞り込みの状態と判定
   - `sort.js`：並び替え
   - `main.js`：データの読み込み、描画、全体の制御
+  - `extra_form.js`：ヘルプの「臨時店舗の JSON を作る」フォーム。入力の検証、JSON の生成、表示例の描画を行います。カードの組み立ては `main.js` の `buildCardHtml()` を使い、サイトの表示と同じにします。
   - `modal.js`：モーダルの開閉。開くボタンに `data-modal-open="モーダルのid"`、閉じるボタンに `data-modal-close` を付けます。
 - **パスは `window.BASE_PATH` から作ります。** サブパス（`/welfare-time/`）で配信しているため、リソースやAPIのパスはすべて `BASE_PATH` を前置します。`BASE_PATH` は `baseof.html` が `relURL` で求めて渡します。
 - **データで動かします。** 建物の座標などはマスター（`assets/facilities.json`）を非同期に読み込み、JavaScript にハードコードしません。

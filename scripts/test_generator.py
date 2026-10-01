@@ -159,7 +159,8 @@ def test_extra_schedules(tmp_dir):
                      shop("Bad_Id", "2026-10-16"),
                      shop("tag", "2026-10-16", note="<script>"),
                      shop("js", "2026-10-16", url="javascript:alert(1)"),
-                     shop("no-time", "2026-10-16", start_time="")])
+                     shop("no-time", "2026-10-16", start_time=""),
+                     shop("reversed", "2026-10-16", start_time="14:00", end_time="11:00")])
     write("c.json", "{ broken")
     write("d.json", {"not": "a list"})
     write("ignored.txt", "[]")
@@ -167,7 +168,7 @@ def test_extra_schedules(tmp_dir):
     entries, problems = load_extra_schedules(tmp_dir)
     ids = [e["id"] for _, e in entries]
     check(failures, ids == ["popup", "popup", "ok"], f"Only valid entries must be loaded, but got {ids}")
-    check(failures, len(problems) == 7, f"Every broken file and entry must be reported, but got {len(problems)}: {problems}")
+    check(failures, len(problems) == 8, f"Every broken file and entry must be reported, but got {len(problems)}: {problems}")
     check(failures, load_extra_schedules(os.path.join(tmp_dir, "missing")) == ([], []),
           "A missing directory must mean no extra shops, not an error")
 

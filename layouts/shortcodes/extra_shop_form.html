@@ -1,0 +1,102 @@
+<div id="xf" class="not-prose flex flex-col gap-6">
+    <!-- 1. 店舗の情報 -->
+    <section class="flex flex-col gap-3">
+        <h2 class="text-lg font-black text-slate-900 dark:text-white">1. 店舗の情報</h2>
+
+        <label class="flex flex-col gap-1">
+            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">店名 <span class="text-red-500">*</span></span>
+            <input id="xf-name" type="text" autocomplete="off" class="xf-input" placeholder="例：臨時カレー販売">
+        </label>
+
+        <div class="flex flex-col gap-1">
+            <label for="xf-id" class="text-sm font-bold text-slate-700 dark:text-slate-300">id <span class="text-red-500">*</span></label>
+            <div class="flex gap-2">
+                <input id="xf-id" type="text" autocomplete="off" spellcheck="false" class="xf-input flex-1" placeholder="例：popup-curry">
+                <button type="button" id="xf-id-auto" class="xf-button shrink-0">自動で作る</button>
+            </div>
+            <span class="text-xs text-slate-500 dark:text-slate-400">店舗を区別する名前です。半角の英小文字・数字・ハイフンだけで書きます。あとで変更を依頼するときは、前回と同じ id を使います。</span>
+        </div>
+
+        <label class="flex flex-col gap-1">
+            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">カテゴリ</span>
+            <select id="xf-category" class="xf-input">
+                <option>ショップ</option>
+                <option>食堂</option>
+                <option>コンビニ</option>
+                <option>サービス</option>
+                <option>ATM</option>
+                <option>キッチンカー</option>
+            </select>
+        </label>
+
+        <div class="flex flex-col gap-1">
+            <label for="xf-location" class="text-sm font-bold text-slate-700 dark:text-slate-300">場所 <span class="text-red-500">*</span></label>
+            <input id="xf-location" type="text" list="xf-buildings" autocomplete="off" class="xf-input" placeholder="例：並楽館前">
+            <datalist id="xf-buildings"></datalist>
+            <span class="text-xs text-slate-500 dark:text-slate-400">地図上の建物の名前で書き始めると、その建物と連動します。候補から選べます。</span>
+            <span id="xf-location-note" class="text-xs font-bold"></span>
+        </div>
+
+        <label class="flex flex-col gap-1">
+            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">ひとこと紹介</span>
+            <input id="xf-headline" type="text" autocomplete="off" class="xf-input" placeholder="例：学園祭の準備期間限定">
+        </label>
+
+        <label class="flex flex-col gap-1">
+            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">案内ページの URL</span>
+            <input id="xf-url" type="url" autocomplete="off" class="xf-input" placeholder="https://example.com/">
+        </label>
+
+        <label class="flex flex-col gap-1">
+            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">備考</span>
+            <input id="xf-note" type="text" autocomplete="off" class="xf-input" placeholder="例：売り切れ次第終了">
+        </label>
+    </section>
+
+    <!-- 2. 営業する日 -->
+    <section class="flex flex-col gap-3">
+        <h2 class="text-lg font-black text-slate-900 dark:text-white">2. 営業する日</h2>
+        <div id="xf-rows" class="flex flex-col gap-2"></div>
+        <div>
+            <button type="button" id="xf-add-row" class="xf-button">＋ 日を追加する</button>
+            <span class="ml-2 text-xs text-slate-500 dark:text-slate-400">直前の日の翌日で、同じ時間の行が加わります。</span>
+        </div>
+    </section>
+
+    <!-- 3. 確認 -->
+    <section class="flex flex-col gap-3">
+        <h2 class="text-lg font-black text-slate-900 dark:text-white">3. 確認</h2>
+        <div id="xf-status" class="text-sm"></div>
+        <ul id="xf-errors" class="list-disc pl-5 text-sm text-red-600 dark:text-red-400"></ul>
+
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">表示例</span>
+            <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-bold">
+                <button type="button" id="xf-view-grid" class="px-3 py-1">カード</button>
+                <button type="button" id="xf-view-list" class="px-3 py-1">リスト</button>
+            </div>
+        </div>
+        <div id="xf-preview" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+
+        <div id="xf-map-box" class="hidden flex flex-col gap-1">
+            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">マップでの見え方（建物にカーソルを合わせたとき）</span>
+            <div class="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 max-w-md">
+                <img id="xf-map-img" alt="キャンパスマップ" class="w-full h-auto block">
+                <div id="xf-map-area" class="building-area highlighted pointer-events-none"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. 依頼する -->
+    <section class="flex flex-col gap-3">
+        <h2 class="text-lg font-black text-slate-900 dark:text-white">4. 依頼する</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-300">次の JSON をコピーして、GitHub の Issue に貼り付けて依頼します。</p>
+        <textarea id="xf-json" readonly rows="12" class="xf-input font-mono text-xs" spellcheck="false"></textarea>
+        <div class="flex flex-wrap gap-2">
+            <button type="button" id="xf-copy" class="xf-button xf-primary">JSON をコピーする</button>
+            <a id="xf-issue" href="https://github.com/tamadalab/welfare-time/issues/new" target="_blank" rel="noopener" class="xf-button">GitHub で Issue を開く</a>
+            <span id="xf-copy-note" class="self-center text-xs text-slate-500 dark:text-slate-400"></span>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Issue は誰でも見られる形で公開されます。個人情報は書かないでください。</p>
+    </section>
+</div>
