@@ -181,7 +181,7 @@ function render(onRendered) {
     allShops.forEach(shop => {
         const status = getShopStatus(shop.start_time, shop.end_time, targetDateStr);
         const category = shop.category || '店舗';
-        // 公認ではない店舗や臨時の店舗は、公式の情報と区別できるようにバッジを付ける
+        // 常設ではない店舗や大学当局の管理外の店舗は、大学が公開している情報と区別できるようにバッジを付ける
         const temporaryBadge = shop.temporary
             ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 tracking-wider shrink-0">臨時</span>'
             : '';
