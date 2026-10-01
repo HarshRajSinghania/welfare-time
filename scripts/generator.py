@@ -221,6 +221,106 @@ def add_kitchen_car_schedules(schedule_map, kitchen_car_schedules, kitchen_car_m
             "note": ""
         })
 
+EXTRA_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+EXTRA_TIME_PATTERN = re.compile(r"^\d{1,2}:\d{2}$")
+EXTRA_TEXT_FIELDS = ("name", "location", "category", "headline", "url", "note")
+
+def validate_extra_entry(raw):
+    """Normalize one entry of data/extra/*.json. Returns (entry, error)."""
+    if not isinstance(raw, dict):
+        return None, "エントリがオブジェクトではありません"
+
+    for key in ("id", "name", "date", "location", "start_time", "end_time"):
+        if not isinstance(raw.get(key), str) or not raw[key].strip():
+            return None, f"必須の項目 '{key}' がありません"
+
+    for key in EXTRA_TEXT_FIELDS + ("business_hours",):
+        value = raw.get(key, "")
+        if not isinstance(value, str):
+            return None, f"項目 '{key}' が文字列ではありません"
+        # カードは innerHTML で組み立てるため、タグになりうる文字は受け付けない
+        if "<" in value or ">" in value:
+            return None, f"項目 '{key}' に < または > は使えません"
+
+    if not EXTRA_ID_PATTERN.match(raw["id"]):
+        return None, f"id '{raw['id']}' は半角英小文字・数字・ハイフンだけで書いてください"
+    try:
+        datetime.strptime(raw["date"], "%Y-%m-%d")
+    except ValueError:
+        return None, f"date '{raw['date']}' は YYYY-MM-DD の形式ではありません"
+    for key in ("start_time", "end_time"):
+        if not EXTRA_TIME_PATTERN.match(raw[key]):
+            return None, f"{key} '{raw[key]}' は HH:MM の形式ではありません"
+    url = raw.get("url", "")
+    if url and not re.match(r"^https?://", url):
+        return None, "url は http:// または https:// で始めてください"
+
+    entry = {
+        "id": raw["id"],
+        "name": squash_name(raw["name"]),
+        "url": url,
+        "image_url": "",
+        "headline": raw.get("headline", ""),
+        "location": squash_field(raw["location"]),
+        "google_map": "",
+        "category": raw.get("category") or "ショップ",
+        "start_time": raw["start_time"],
+        "end_time": raw["end_time"],
+        "business_hours": raw.get("business_hours") or f"{raw['start_time']}～{raw['end_time']}",
+        "note": raw.get("note", ""),
+        "temporary": True,
+    }
+    return (raw["date"], entry), None
+
+def load_extra_schedules(extra_dir):
+    """Read data/extra/*.json: shops that are not official or open only temporarily.
+
+    Each file is an array of one-day entries. Files are read in name order, so a
+    later file wins over an earlier one for the same (id, date). A broken file or
+    entry is skipped and reported; it never stops the daily update.
+
+    Returns the (date, entry) pairs and the problems found.
+    """
+    entries, problems = [], []
+    if not extra_dir or not os.path.isdir(extra_dir):
+        return entries, problems
+
+    for path in sorted(Path(extra_dir).glob("*.json")):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                raw_entries = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            problems.append((path.name, f"読み込めません: {e}"))
+            continue
+        if not isinstance(raw_entries, list):
+            problems.append((path.name, "最上位が配列ではありません"))
+            continue
+        for i, raw in enumerate(raw_entries, start=1):
+            parsed, error = validate_extra_entry(raw)
+            if error:
+                problems.append((f"{path.name} の {i} 件目", error))
+            else:
+                entries.append(parsed)
+    return entries, problems
+
+def report_extra_problems(problems):
+    """Report skipped extra entries. Notifies, never fails the run."""
+    if not problems:
+        return
+    print(f"\n!!! {len(problems)} problem(s) in data/extra, skipped:")
+    for where, message in problems:
+        print(f"  - {where}: {message}")
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        detail = " / ".join(f"{where}: {message}" for where, message in problems)
+        print(f"::warning title=臨時店舗のJSONに問題があります::{len(problems)}件を読み飛ばしました: {detail}")
+
+def add_extra_schedules(schedule_map, extra_entries):
+    """Add the extra shops. The same (id, date) as an existing entry replaces it."""
+    for date_str, entry in extra_entries:
+        day_data = get_or_create_date(schedule_map, date_str)
+        day_data["facilities"] = [f for f in day_data["facilities"] if f["id"] != entry["id"]]
+        day_data["facilities"].append(dict(entry))
+
 def fill_date_gaps(schedule_map):
     """Fill gaps between the first and last dates to ensure continuity."""
     if not schedule_map:
@@ -269,12 +369,14 @@ def inject_static_schedules(schedule_map, facilities):
                 })
 
 def build_schedule_map(cafeteria_dir, kitchen_car_schedules, cafeteria_master_map,
-                       kitchen_car_master_map, facilities, base_url, now_jst):
+                       kitchen_car_master_map, facilities, base_url, now_jst, extra_entries=()):
     """Build the date-keyed schedule from every source.
 
-    The order matters: cafeterias, kitchen cars, then static shops, so that the
-    facilities of a day keep that order. Gaps are filled before injecting the
-    static shops so that the filled days get them too.
+    The order matters: cafeterias, kitchen cars, static shops, then extra shops,
+    so that the facilities of a day keep that order. Gaps are filled before
+    injecting the static shops so that the filled days get them too. The extra
+    shops come last so that they can replace an entry of any other source, and
+    their dates are created before the gaps are filled.
 
     Returns the schedule and the shops that could not be resolved in the master.
     """
@@ -288,8 +390,11 @@ def build_schedule_map(cafeteria_dir, kitchen_car_schedules, cafeteria_master_ma
 
     unresolved = add_cafeteria_schedules(schedule_map, cafeteria_dir, cafeteria_master_map, base_url)
     add_kitchen_car_schedules(schedule_map, kitchen_car_schedules, kitchen_car_master_map)
+    for date_str, _ in extra_entries:
+        get_or_create_date(schedule_map, date_str)
     fill_date_gaps(schedule_map)
     inject_static_schedules(schedule_map, facilities)
+    add_extra_schedules(schedule_map, extra_entries)
     return schedule_map, unresolved
 
 def write_daily_api(schedule_map, api_schedule_dir, now_jst):
@@ -365,7 +470,7 @@ def write_status_api(schedule_map, shop_count, metadata, base_url, output_dir, l
         "sources": global_sources
     }, os.path.join(output_dir, "api/status"))
 
-def generator(cafeteria_dir, kitchen_cars_path, master_path, output_dir, kitchen_cars_archive, base_url):
+def generator(cafeteria_dir, kitchen_cars_path, master_path, output_dir, kitchen_cars_archive, base_url, extra_dir=None):
     # Use JST for all time-based logic and timestamps
     now_jst = datetime.now(JST)
     today_str = now_jst.strftime("%Y-%m-%d")
@@ -389,9 +494,13 @@ def generator(cafeteria_dir, kitchen_cars_path, master_path, output_dir, kitchen
     kitchen_car_schedules = merge_kitchen_car_archive(past_archive, scraped, today_str)
     save_json(kitchen_car_schedules, kitchen_cars_archive)
 
+    extra_entries, extra_problems = load_extra_schedules(extra_dir)
+
     schedule_map, unresolved = build_schedule_map(cafeteria_dir, kitchen_car_schedules, cafeteria_master_map,
-                                                  kitchen_car_master_map, facilities, base_url, now_jst)
+                                                  kitchen_car_master_map, facilities, base_url, now_jst,
+                                                  extra_entries)
     report_unresolved_shops(unresolved)
+    report_extra_problems(extra_problems)
 
     api_schedule_dir = os.path.join(output_dir, "api/schedule")
     write_daily_api(schedule_map, api_schedule_dir, now_jst)
@@ -407,5 +516,7 @@ if __name__ == "__main__":
     parser.add_argument("--master", required=True)
     parser.add_argument("-o", "--output-dir", required=True)
     parser.add_argument("--base-url", required=True)
+    parser.add_argument("--extra-dir", default=None, help="臨時店舗などのJSONを置くディレクトリ")
     args = parser.parse_args()
-    generator(args.cafeteria_dir, args.kitchen_cars, args.master, args.output_dir, args.kitchen_cars_archive, args.base_url)
+    generator(args.cafeteria_dir, args.kitchen_cars, args.master, args.output_dir, args.kitchen_cars_archive,
+              args.base_url, args.extra_dir)

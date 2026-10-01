@@ -38,6 +38,46 @@
    - 括弧を全角に変換します。
    - チルダ `~` を全角の `～` に変換します。
 
+## 臨時店舗
+
+常設ではない店舗や、大学の管理外の店舗は、`data/extra/*.json` に置いて載せます。このディレクトリは追跡対象で、置いた JSON は次の毎朝の更新（または `workflow_dispatch` による手動実行）で公開されます。
+
+JSON は1日分のエントリの配列です。複数日に営業する店舗は、日ごとにエントリを書きます。
+
+```json
+[
+  {
+    "id": "popup-curry",
+    "name": "臨時カレー販売",
+    "date": "2026-10-15",
+    "location": "並楽館前",
+    "category": "キッチンカー",
+    "headline": "学園祭の準備期間限定",
+    "url": "https://example.com/",
+    "start_time": "11:00",
+    "end_time": "14:00",
+    "business_hours": "11:00～14:00",
+    "note": "売り切れ次第終了"
+  }
+]
+```
+
+| 項目 | 必須 | 内容 |
+| :--- | :--- | :--- |
+| `id` | 必須 | 半角英小文字・数字・ハイフンだけ。店名にしません（「識別子と名前」のとおり）。 |
+| `name` | 必須 | 店名 |
+| `date` | 必須 | `YYYY-MM-DD` |
+| `location` | 必須 | 場所。建物名で始めると、マップのその建物と連動します（例：`並楽館前`）。学外など、該当する建物がなければ、マップ外として扱います。 |
+| `start_time`、`end_time` | 必須 | `HH:MM` |
+| `category` | 任意 | 既存のカテゴリ。省略すると `ショップ` |
+| `headline`、`url`、`note` | 任意 | `url` は `http://` または `https://` で始めます。 |
+| `business_hours` | 任意 | 省略すると `start_time～end_time` |
+
+- ファイルは名前順に読み、同じ `(id, date)` は後のものが先のものを置き換えます。公式の店舗と同じ `id` と日付を書くと、その日のエントリを置き換えます。
+- 出力には `temporary: true` が付き、サイトのカードに「臨時」と表示します。
+- カードは HTML として組み立てるため、`<` と `>` を含む項目は受け付けません。
+- 過去の日付のファイルも消さずに残します。その日に何が営業していたかの記録になります。
+
 ## データパイプライン
 
 すべて `just` から実行します。単体のスクリプトを直接呼ぶ想定ではありません。
@@ -48,9 +88,9 @@
 | `scripts/parse_cafeteria_pdf.py` | `data/pdfs/YYYY_MM.pdf` | `data/cafeterias/YYYY_MM.json` |
 | `scripts/fetch_kitchen_cars.py` | SHOP STOP のページ | `data/kitchencars/raw.html` |
 | `scripts/scrape_kitchen_cars.py` | `data/kitchencars/raw.html` | `data/kitchencars/scraped.json` |
-| `scripts/generator.py` | 上記の2つ、アーカイブ、マスター | `static/api/` |
+| `scripts/generator.py` | 上記の2つ、アーカイブ、マスター、`data/extra/*.json` | `static/api/` |
 
-`generator.py` の必須引数は6つあります。`--cafeteria-dir`、`--kitchen-cars`、`--kitchen-cars-archive`、`--master`、`--base-url`、出力先の `-o` です。`data/cafeterias/` と `data/kitchencars/` は追跡対象外の中間生成物です。`just` の解析のレシピは、入力（PDFやHTML）が出力より新しいときだけ解析し直します。作り直したいときは `just clean` で削除します。CI は毎回リポジトリを取得し直すため、毎朝すべてを解析します。
+`generator.py` の必須引数は6つあります。`--cafeteria-dir`、`--kitchen-cars`、`--kitchen-cars-archive`、`--master`、`--base-url`、出力先の `-o` です。臨時店舗のディレクトリは任意の引数 `--extra-dir` で渡し、`just generate` は `data/extra` を渡します。`data/cafeterias/` と `data/kitchencars/` は追跡対象外の中間生成物です。`just` の解析のレシピは、入力（PDFやHTML）が出力より新しいときだけ解析し直します。作り直したいときは `just clean` で削除します。CI は毎回リポジトリを取得し直すため、毎朝すべてを解析します。
 
 生成後、Hugo が `static/` を `public/` へコピーし、`public/` を gh-pages ブランチとして公開します。
 
@@ -86,4 +126,5 @@ SHOP STOP のページには、出店が2つの形式で載っています。
 | :--- | :--- |
 | キッチンカーのスクレイプ結果が0件 | アーカイブに手を加えず、当日以降の予定も前回のまま残します。夏期休暇中はこれが正常です。 |
 | マスターに登録されていない食堂 | `missing-` で始まる `id` で公開してデータを残し、ログの `!!! MAJOR ERROR` と GitHub Actions の警告（`::warning`）でまとめて知らせます。更新は止めません。 |
+| `data/extra/*.json` の不備（JSON として読めない、必須項目がない、形式が違う） | そのファイルまたはエントリだけを読み飛ばし、ログと GitHub Actions の警告（`::warning`）で知らせます。更新は止めません。 |
 | 取得や解析のスクリプトが失敗 | ワークフローが失敗し、GitHub の標準の通知（メールなど）で知らせます。通知の受け取り方は、各自の GitHub の設定に従います。 |

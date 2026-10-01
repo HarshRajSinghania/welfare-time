@@ -181,12 +181,19 @@ function render(onRendered) {
     allShops.forEach(shop => {
         const status = getShopStatus(shop.start_time, shop.end_time, targetDateStr);
         const category = shop.category || '店舗';
+        // 常設ではない店舗や大学の管理外の店舗は、大学が公開している情報と区別できるようにバッジを付ける
+        const temporaryBadge = shop.temporary
+            ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 tracking-wider shrink-0">臨時</span>'
+            : '';
         let html = '';
         if (currentView === 'grid') {
             html = `
             <div id="card-${shop.id}" data-location="${shop.location}" class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1">
                 <div class="flex justify-between items-start mb-2 gap-2">
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0">${category}</span>
+                    <div class="flex items-center gap-1 min-w-0">
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0">${category}</span>
+                        ${temporaryBadge}
+                    </div>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black tracking-tight shrink-0 ${status.class}">${status.label}</span>
                 </div>
                 <h3 class="font-black text-slate-900 dark:text-white mb-1 leading-tight line-clamp-2" title="${shop.name}">${shop.name}</h3>
@@ -214,6 +221,7 @@ function render(onRendered) {
                 <div class="flex justify-between items-start mb-2 gap-2">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0">${category}</span>
+                        ${temporaryBadge}
                         <h3 class="font-black text-slate-900 dark:text-white truncate" title="${shop.name}">${shop.name}</h3>
                     </div>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black tracking-tight shrink-0 ${status.class}">${status.label}</span>
@@ -327,12 +335,23 @@ const HIGHLIGHTED_CARD_CLASSES = ['ring-2', 'ring-ksu', 'dark:ring-blue-500'];
 const KITCHEN_CAR_LOCATION = '大学内指定場所';
 const KITCHEN_CAR_BUILDING = 'pilotis';
 
+/**
+ * 場所が建物の名前で始まるなら、その建物の id を返す（例：「並楽館前」→ heirakukan）。
+ * マスターに載っていない臨時の店舗を、場所の書き方から建物に対応づけるために使う。
+ * 名前が長い建物を先に調べ、一部が重なる名前でも取り違えないようにする。
+ */
+function findBuildingByLocation(location) {
+    const ids = Object.keys(master.buildings).sort((a, b) => master.buildings[b].name.length - master.buildings[a].name.length);
+    return ids.find(k => location.startsWith(master.buildings[k].name)) || null;
+}
+
 /** カードの施設がある建物の id を返す。マップ外なら null。 */
 function findBuildingOfCard(card) {
     const shopId = card.id.replace('card-', '');
     const buildingId = Object.keys(master.buildings).find(k => master.buildings[k].shops.includes(shopId));
     if (buildingId) return buildingId;
-    return card.dataset.location === KITCHEN_CAR_LOCATION ? KITCHEN_CAR_BUILDING : null;
+    if (card.dataset.location === KITCHEN_CAR_LOCATION) return KITCHEN_CAR_BUILDING;
+    return findBuildingByLocation(card.dataset.location);
 }
 
 // delegateHover() で登録した、カーソルが入った・出たときの処理の一覧

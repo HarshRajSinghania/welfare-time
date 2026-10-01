@@ -88,6 +88,7 @@ generate: parse_pdf parse_kitchencar
         --kitchen-cars {{ KITCHEN_CARS_JSON }} \
         --kitchen-cars-archive {{ DATA_DIR }}/kitchen_cars_past.json \
         --master {{ FACILITIES_JSON }} \
+        --extra-dir {{ DATA_DIR }}/extra \
         --base-url "$base_url" \
         -o {{ DEST_DIR }}
 
