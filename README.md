@@ -105,7 +105,7 @@ just PYTHON=/path/to/venv/bin/python test
 | `layouts/` | Hugo のテンプレート |
 | `assets/` | Tailwind CSS のソース |
 | `static/` | 静的ファイル。`static/api/` は生成物のため追跡対象外 |
-| `data/` | 取得したPDFとキッチンカーのアーカイブ |
+| `data/` | 取得したPDFとキッチンカーのアーカイブ。`data/extra/` は臨時店舗のJSON |
 | `testdata/` | テスト用のPDFとHTMLフィクスチャ |
 | `resources/spec/` | 仕様書と開発の規約 |
 | `resources/` | 発表用のスライドやポスター |

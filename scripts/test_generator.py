@@ -3,7 +3,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from generator import merge_kitchen_car_archive, add_cafeteria_schedules
+from generator import (merge_kitchen_car_archive, add_cafeteria_schedules,
+                       load_extra_schedules, add_extra_schedules)
 
 TODAY = "2026-08-04"
 
@@ -132,10 +133,79 @@ def test_unresolved_shops(tmp_dir):
 
     print("Regression test passed: unresolved shops are reported without dropping data.")
 
+def test_extra_schedules(tmp_dir):
+    """臨時店舗のJSONの読み込みと、置き換え、読み飛ばしを検証する。
+
+    JSONの不備で毎朝の更新を止めないため、不備は読み飛ばして報告に留める。
+    """
+    import json
+    failures = []
+
+    os.makedirs(tmp_dir, exist_ok=True)
+    for name in os.listdir(tmp_dir):
+        os.remove(os.path.join(tmp_dir, name))
+
+    def shop(shop_id, date, **kwargs):
+        return {"id": shop_id, "name": f"{shop_id}の店", "date": date, "location": "並楽館前",
+                "start_time": "11:00", "end_time": "14:00", **kwargs}
+
+    def write(name, content):
+        with open(os.path.join(tmp_dir, name), "w", encoding="utf-8") as f:
+            f.write(content if isinstance(content, str) else json.dumps(content, ensure_ascii=False))
+
+    write("a.json", [shop("popup", "2026-10-15"), shop("popup", "2026-10-15", end_time="15:00")])
+    write("b.json", [shop("ok", "2026-10-16", category="食堂", business_hours="11:00～14:00（売り切れ次第終了）"),
+                     shop("bad-date", "2026/10/16"),
+                     shop("Bad_Id", "2026-10-16"),
+                     shop("tag", "2026-10-16", note="<script>"),
+                     shop("js", "2026-10-16", url="javascript:alert(1)"),
+                     shop("no-time", "2026-10-16", start_time="")])
+    write("c.json", "{ broken")
+    write("d.json", {"not": "a list"})
+    write("ignored.txt", "[]")
+
+    entries, problems = load_extra_schedules(tmp_dir)
+    ids = [e["id"] for _, e in entries]
+    check(failures, ids == ["popup", "popup", "ok"], f"Only valid entries must be loaded, but got {ids}")
+    check(failures, len(problems) == 7, f"Every broken file and entry must be reported, but got {len(problems)}: {problems}")
+    check(failures, load_extra_schedules(os.path.join(tmp_dir, "missing")) == ([], []),
+          "A missing directory must mean no extra shops, not an error")
+
+    if entries:
+        ok = [e for d, e in entries if e["id"] == "ok"][0]
+        check(failures, ok["temporary"] is True, "Extra shops must be marked temporary")
+        check(failures, ok["category"] == "食堂", f"An explicit category must be kept, but got {ok['category']!r}")
+        popup = [e for d, e in entries if e["id"] == "popup"][0]
+        check(failures, popup["category"] == "ショップ", f"The default category must be ショップ, but got {popup['category']!r}")
+        check(failures, popup["business_hours"] == "11:00～14:00",
+              f"The business hours must default to the start and end, but got {popup['business_hours']!r}")
+
+    # 同じ (id, date) は、公式のエントリも含めて、あとのものが置き換える
+    schedule_map = {"2026-10-15": {"date": "2026-10-15", "timezone": "JST", "sources": [], "facilities": [
+        {"id": "popup", "name": "元の店", "category": "ショップ", "location": "", "start_time": "09:00",
+         "end_time": "10:00", "business_hours": "", "note": ""},
+        {"id": "other", "name": "別の店", "category": "ショップ", "location": "", "start_time": "09:00",
+         "end_time": "10:00", "business_hours": "", "note": ""}]}}
+    add_extra_schedules(schedule_map, entries)
+    day = schedule_map["2026-10-15"]["facilities"]
+    popups = [f for f in day if f["id"] == "popup"]
+    check(failures, len(popups) == 1, f"The same id and date must appear once, but got {len(popups)}")
+    if popups:
+        check(failures, popups[0]["end_time"] == "15:00",
+              f"The later entry must win, but got end_time {popups[0]['end_time']!r}")
+    check(failures, any(f["id"] == "other" for f in day), "Other shops of the day must be kept")
+    check(failures, "2026-10-16" in schedule_map, "The date of an extra shop must be created")
+
+    if failures:
+        raise AssertionError("\n  - " + "\n  - ".join(failures))
+
+    print("Regression test passed: extra shops are loaded, replace by (id, date) and skip broken input.")
+
 if __name__ == "__main__":
     try:
         test_merge_kitchen_car_archive()
         test_unresolved_shops(os.path.join("tmp", "test_generator_cafeterias"))
+        test_extra_schedules(os.path.join("tmp", "test_generator_extra"))
     except Exception as e:
         print(f"Test failed: {e}")
         exit(1)
