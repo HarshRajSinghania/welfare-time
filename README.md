@@ -24,16 +24,19 @@
 | Fetch | `just fetch_kitchencar` | Playwright でJS描画後のHTMLを取得 | `data/kitchencars/raw.html` |
 | Parse | `just parse_pdf` | PDFを解析 | `data/cafeterias/*.json` |
 | Scrape | `just parse_kitchencar` | HTMLを解析 | `data/kitchencars/scraped.json` |
-| Generate | `just generate` | 統合してAPIを生成 | `static/api/` |
-| Build | `just build_html` | Tailwind CSS と Hugo でサイトを生成 | `public/` |
+| Generate | `just generate` | 統合してAPIと公開用PDFを生成 | `static/api/`, `static/daily/` |
+| Commit source data | GitHub Actions | PDF・メタデータ・キッチンカー履歴を保存 | `main` |
+| Publish | `just build_html` | Tailwind CSS と Hugo でサイトを生成 | `gh-pages` |
 
-`static/api/` に生成されたファイルを Hugo が `public/` へコピーし、`public/` を gh-pages ブランチとして公開しています。
+`data/cafeterias/` と `data/kitchencars/` は解析時に作る中間データです。`static/` 以下のAPIとPDFも生成物で、`main`にはコミットせず、Hugoでサイトと一緒に `gh-pages` へ公開します。
 
 ## 毎朝の自動更新
 
-[GitHub Actions](.github/workflows/daily_update.yml) が毎日 JST 7時（UTC 22時）に上記のパイプラインを実行し、生成物を gh-pages ブランチへ push します。実行の混雑により、実際の更新時刻は日によって前後します。
+[GitHub Actions](.github/workflows/daily_update.yml) が毎日 JST 7時（UTC 22時）と手動実行でパイプラインを動かします。実行の混雑により、実際の更新時刻は日によって前後します。同時に複数の更新が走らないよう、実行を直列化しています。
 
-キッチンカーの過去データは `data/kitchen_cars_past.json` に蓄積し、更新のたびに main ブランチへコミットします。情報源は過去の出店情報をすぐ削除するため、このファイルが「その日に何が出店していたか」の唯一の記録になります。
+更新では、大学サイトから取得したPDFと `data/pdfs/.metadata.json`、および `data/kitchen_cars_past.json` を `main` にコミットします。PDFは、大学サイトからリンクが外れた後も次回以降のAPI再生成に使えるよう保持します。キッチンカーの情報源は過去の出店情報をすぐ削除するため、アーカイブは「その日に何が出店していたか」の唯一の記録です。
+
+`main` への保存後、今回生成した日別APIと `gh-pages` で公開中の日別APIを比較します。過去日（JST）の食堂について、店舗・場所・営業時間・注記の記録が生成結果から欠けていれば、既存の公開APIを置き換えずに更新を失敗させます。検査を通った場合だけ、生成済みのAPIをサイトとPDFと一緒に `gh-pages` へ公開します。公開済みの `daily/` のPDFは累積し、APIは毎回作り直します。
 
 蓄積には次の不変条件があります。
 
@@ -104,8 +107,8 @@ just PYTHON=/path/to/venv/bin/python test
 | `content/` | Hugo のコンテンツ（ヘルプ、APIリファレンス） |
 | `layouts/` | Hugo のテンプレート |
 | `assets/` | Tailwind CSS のソース |
-| `static/` | 静的ファイル。`static/api/` は生成物のため追跡対象外 |
-| `data/` | 取得したPDFとキッチンカーのアーカイブ。`data/extra/` は臨時店舗のJSON |
+| `static/` | 静的ファイルと生成物。APIと公開用PDFは追跡対象外 |
+| `data/` | 取得・保存するPDFとメタデータ、キッチンカーのアーカイブ。`data/extra/` は臨時店舗のJSON |
 | `testdata/` | テスト用のPDFとHTMLフィクスチャ |
 | `resources/spec/` | 仕様書と開発の規約 |
 | `resources/` | 発表用のスライドやポスター |

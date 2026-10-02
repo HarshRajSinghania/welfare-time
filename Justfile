@@ -78,7 +78,7 @@ generate: parse_pdf parse_kitchencar
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p {{ PDFS_DEST_DIR }}
-    cp -n {{ PDF_SRC_DIR }}/*.pdf {{ PDFS_DEST_DIR }}/ 2>/dev/null || true
+    cp -f {{ PDF_SRC_DIR }}/*.pdf {{ PDFS_DEST_DIR }}/ 2>/dev/null || true
     cp {{ FACILITIES_JSON }} {{ DEST_DIR }}/assets
     cp {{ PDF_SRC_DIR }}/.metadata.json {{ PDFS_DEST_DIR }}/ 2>/dev/null || true
     # サイトのURLは hugo.toml の baseURL を唯一の情報源とする
