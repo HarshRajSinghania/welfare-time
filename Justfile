@@ -115,7 +115,7 @@ test:
     #!/usr/bin/env bash
     # 1つ落ちても残りを実行し、最後にまとめて失敗を返す。
     fail=0
-    for t in test_cafeteria_parser test_kitchen_car_scraper test_generator; do
+    for t in test_cafeteria_parser test_kitchen_car_scraper test_generator test_validate_cafeteria_history; do
         echo "--- $t ---"
         {{ PYTHON }} {{ SCRIPTS_DIR }}/$t.py || fail=1
     done
