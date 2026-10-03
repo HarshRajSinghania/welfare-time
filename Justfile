@@ -78,7 +78,7 @@ generate: parse_pdf parse_kitchencar
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p {{ PDFS_DEST_DIR }}
-    cp -n {{ PDF_SRC_DIR }}/*.pdf {{ PDFS_DEST_DIR }}/ 2>/dev/null || true
+    cp -f {{ PDF_SRC_DIR }}/*.pdf {{ PDFS_DEST_DIR }}/ 2>/dev/null || true
     cp {{ FACILITIES_JSON }} {{ DEST_DIR }}/assets
     cp {{ PDF_SRC_DIR }}/.metadata.json {{ PDFS_DEST_DIR }}/ 2>/dev/null || true
     # サイトのURLは hugo.toml の baseURL を唯一の情報源とする
@@ -115,7 +115,7 @@ test:
     #!/usr/bin/env bash
     # 1つ落ちても残りを実行し、最後にまとめて失敗を返す。
     fail=0
-    for t in test_cafeteria_parser test_kitchen_car_scraper test_generator; do
+    for t in test_cafeteria_parser test_kitchen_car_scraper test_generator test_validate_cafeteria_history; do
         echo "--- $t ---"
         {{ PYTHON }} {{ SCRIPTS_DIR }}/$t.py || fail=1
     done

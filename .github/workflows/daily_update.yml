@@ -5,6 +5,10 @@ on:
     - cron: '0 22 * * *'  # 毎日UTC 22:00（JST 07:00 相当）
   workflow_dispatch: {}
 
+concurrency:
+  group: welfare-time-daily-update
+  cancel-in-progress: false
+
 jobs:
   update-data:
     runs-on: ubuntu-latest
@@ -56,21 +60,19 @@ jobs:
         run:
           just generate
 
-      - name: キッチンカーのアーカイブをmainにコミットする
+      - name: 入力データをmainにコミットする
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet -- data/kitchen_cars_past.json; then
-            echo "No changes to the kitchen car archive"
+          git add data/pdfs data/kitchen_cars_past.json
+          if git diff --cached --quiet; then
+            echo "No source data changes"
             exit 0
           fi
 
-          git add data/kitchen_cars_past.json
-          git commit -m "Update kitchen car archive: $(date +'%Y-%m-%d')"
+          git commit -m "Update source data: $(date +'%Y-%m-%d')"
           # ジョブ実行中にmainが進んでいる場合に備えてrebaseしてからpushする。
-          # 生成物（data/pdfs/.metadata.json など）で作業ツリーが汚れているため
-          # --autostash がないとrebaseが失敗する。
           git pull --rebase --autostash origin main
           git push origin HEAD:main
 
@@ -83,6 +85,11 @@ jobs:
           # gh-pagesブランチをpublicディレクトリにworktreeとして追加
           git fetch origin gh-pages
           git worktree add public gh-pages
+
+          # 過去に公開した食堂データが今回の生成結果から消えていたら公開しない。
+          python3 scripts/validate_cafeteria_history.py \
+            --previous public/api/schedule \
+            --current static/api/schedule
 
           # api配下は完全な生成物なので、毎回作り直して古いIDのファイルが
           # 残り続けないようにする。daily配下のPDFは累積するため消さない。
