@@ -1122,6 +1122,17 @@
     "url": "https://schedule.mellow.jp/ss_web/shops/dqSe1b"
   },
   {
+    "id": "2ZSvWJ",
+    "name": "Xingfukitchen",
+    "location": "",
+    "date": "2026-10-12",
+    "start_time": "11:00",
+    "end_time": "17:00",
+    "business_hours": "11:00〜17:00",
+    "headline": "タルタル唐揚げ弁当",
+    "url": "https://schedule.mellow.jp/ss_web/shops/2ZSvWJ"
+  },
+  {
     "id": "V2Sbq5",
     "name": "kaka男cafe",
     "location": "",
@@ -1142,6 +1153,17 @@
     "business_hours": "11:00〜17:00",
     "headline": "生パスタ ペペロンチーノ",
     "url": "https://schedule.mellow.jp/ss_web/shops/EpSrJN"
+  },
+  {
+    "id": "vmSb9R",
+    "name": "Panda Kitchen",
+    "location": "",
+    "date": "2026-10-19",
+    "start_time": "11:00",
+    "end_time": "17:00",
+    "business_hours": "11:00〜17:00",
+    "headline": "クロッフル",
+    "url": "https://schedule.mellow.jp/ss_web/shops/vmSb9R"
   },
   {
     "id": "dqSeq3",
@@ -1340,5 +1362,16 @@
     "business_hours": "11:00〜17:00",
     "headline": "リトルフィートの夏が来た!",
     "url": "https://schedule.mellow.jp/ss_web/shops/WkSdar"
+  },
+  {
+    "id": "RoSVpz",
+    "name": "kitchen car DOZO",
+    "location": "",
+    "date": "2026-10-30",
+    "start_time": "11:00",
+    "end_time": "17:00",
+    "business_hours": "11:00〜17:00",
+    "headline": "ホットサンド （ハムエッグチーズ）",
+    "url": "https://schedule.mellow.jp/ss_web/shops/RoSVpz"
   }
 ]
