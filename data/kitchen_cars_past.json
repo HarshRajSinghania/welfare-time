@@ -1089,6 +1089,28 @@
     "url": "https://schedule.mellow.jp/ss_web/shops/aASDGZ"
   },
   {
+    "id": "WkSdar",
+    "name": "リトルフィート カフェ キョウト",
+    "location": "",
+    "date": "2026-10-07",
+    "start_time": "11:00",
+    "end_time": "17:00",
+    "business_hours": "11:00〜17:00",
+    "headline": "リトルフィートの夏が来た!",
+    "url": "https://schedule.mellow.jp/ss_web/shops/WkSdar"
+  },
+  {
+    "id": "V2Sbgj",
+    "name": "pizza UGO 2号車",
+    "location": "",
+    "date": "2026-10-07",
+    "start_time": "11:00",
+    "end_time": "17:00",
+    "business_hours": "11:00〜17:00",
+    "headline": "マルゲリータ",
+    "url": "https://schedule.mellow.jp/ss_web/shops/V2Sbgj"
+  },
+  {
     "id": "dqSeXG",
     "name": "京タコス",
     "location": "",
@@ -1411,34 +1433,12 @@
     "id": "dqSeXG",
     "name": "京タコス",
     "location": "",
-    "date": "2026-12-07",
+    "date": "2026-12-21",
     "start_time": "11:00",
     "end_time": "17:00",
     "business_hours": "11:00〜17:00",
     "headline": "お肉たっぷりタコライス",
     "url": "https://schedule.mellow.jp/ss_web/shops/dqSeXG"
-  },
-  {
-    "id": "WkSdar",
-    "name": "リトルフィート カフェ キョウト",
-    "location": "",
-    "date": "2026-10-07",
-    "start_time": "11:00",
-    "end_time": "17:00",
-    "business_hours": "11:00〜17:00",
-    "headline": "リトルフィートの夏が来た!",
-    "url": "https://schedule.mellow.jp/ss_web/shops/WkSdar"
-  },
-  {
-    "id": "V2Sbgj",
-    "name": "pizza UGO 2号車",
-    "location": "",
-    "date": "2026-10-07",
-    "start_time": "11:00",
-    "end_time": "17:00",
-    "business_hours": "11:00〜17:00",
-    "headline": "マルゲリータ",
-    "url": "https://schedule.mellow.jp/ss_web/shops/V2Sbgj"
   },
   {
     "id": "4DSW5",
