@@ -11,6 +11,15 @@ from pathlib import Path
 
 # Define timezones
 JST = timezone(timedelta(hours=9), "JST")
+# requests has no default timeout. The morning update job should fail fast
+# if the university site stops responding. See issue #90.
+REQUEST_TIMEOUT = 30
+
+
+def fetch(method, url):
+    response = method(url, timeout=REQUEST_TIMEOUT)
+    response.raise_for_status()
+    return response
 
 def load_metadata(metadata_file):
     if os.path.exists(metadata_file):
@@ -61,7 +70,7 @@ def main():
         with open(args.html, "r") as f:
             html_content = f.read()
     else:
-        response = requests.get(args.url)
+        response = fetch(requests.get, args.url)
         html_content = response.text
 
     if args.save_html:
@@ -84,11 +93,11 @@ def main():
     metadata = load_metadata(metadata_file)
     
     for pdf_url in pdf_links:
-        head = requests.head(pdf_url)
+        head = fetch(requests.head, pdf_url)
         last_modified = head.headers.get("Last-Modified")
         etag = head.headers.get("ETag")
         
-        res = requests.get(pdf_url)
+        res = fetch(requests.get, pdf_url)
         temp_path = os.path.join(daily_dir, "temp.pdf")
         with open(temp_path, "wb") as f:
             f.write(res.content)
